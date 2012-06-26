@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<software>
+    <dependencies>
+        <extends>
+            <extension name="mugoobjectrelations" />
+        </extends>
+    </dependencies>
+    <metadata>
+        <name>&lt;a href="http://www.mugo.ca/Products/Mugo-Object-Relations"&gt;Mugo Object Relations&lt;/a&gt;</name>
+        <version>1.0</version>
+        <copyright>Copyright (C) 2012 &lt;a href="http://www.mugo.ca"&gt;Mugo Web&lt;/a&gt;</copyright>
+        <license>GNU General Public License v2.0</license>
+    </metadata>
+</software>

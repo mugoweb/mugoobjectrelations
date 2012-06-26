@@ -1,0 +1,13 @@
+#################################
+Mugo Object Relations version 1.0
+#################################
+
+1) Description
+	The Mugo Object Relations extension is meant to allow using
+"Cross reference data" on object relations.
+
+2) Installation
+	Works as provided:
+            1) Extract the contents under the extension/ directory of your
+            eZ Publish installation and activate it for all siteaccesses.
+            2) Regenerate the autoloads array
