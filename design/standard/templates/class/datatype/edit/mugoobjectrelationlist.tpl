@@ -1,39 +1,58 @@
-
-<div style="border: solid 1px #ddddee;">
-
 <!-- class / edit -->
-
 {let content=$class_attribute.content
      class_list=$content.class_constraint_list
      default_placement=$content.default_placement
      type=$content.type
-     all_class_list=fetch( class, list )}
+     all_class_list=fetch( class, list )
+     xreference=$content.xreference_type}
 
 <div class="block">
-<label>{'Selection method'|i18n( 'design/standard/class/datatype' )}:</label>
-<select name="ContentClass_ezobjectrelationlist_selection_type_{$class_attribute.id}">
-    <option value="0" {eq( $content.selection_type, 0 )|choose( '', 'selected="selected"' )}>{'Browse'|i18n( 'design/standard/class/datatype' )}</option>
-    <option value="1" {eq( $content.selection_type, 1 )|choose( '', 'selected="selected"' )}>{'Drop-down list'|i18n( 'design/standard/class/datatype' )}</option>
-    <option value="2" {eq( $content.selection_type, 2 )|choose( '', 'selected="selected"' )}>{'List with radio buttons'|i18n( 'design/standard/class/datatype' )}</option>
-    <option value="3" {eq( $content.selection_type, 3 )|choose( '', 'selected="selected"' )}>{'List with checkboxes'|i18n( 'design/standard/class/datatype' )}</option>
-    <option value="4" {eq( $content.selection_type, 4 )|choose( '', 'selected="selected"' )}>{'Multiple selection list'|i18n( 'design/standard/class/datatype' )}</option>
-    <option value="5" {eq( $content.selection_type, 5 )|choose( '', 'selected="selected"' )}>{'Template based, multi'|i18n( 'design/standard/class/datatype' )}</option>
-    <option value="6" {eq( $content.selection_type, 6 )|choose( '', 'selected="selected"' )}>{'Template based, single'|i18n( 'design/standard/class/datatype' )}</option>
-</select>
-</div>
+    <br />
+    <fieldset>
+        {*$class_attribute.content.xreference_options|attribute(show,2)*}
+        <legend>{'X-Reference data type:'|i18n( 'design/standard/class/datatype' )}</legend>
+        <input type="radio" name="ContentClass_mugoobjectrelationlist_xreference_type_{$class_attribute.id}" value="text" {if or( eq( $xreference, 'text'), ne( $xreference, 'selection' ))}checked{/if} /> Open text<br />
+        <input type="radio" name="ContentClass_mugoobjectrelationlist_xreference_type_{$class_attribute.id}" value="selection" {if eq( $xreference, 'selection' )}checked{/if} /> Selection
 
-<div class="block">
-    {section show=eq( ezini( 'BackwardCompatibilitySettings', 'AdvancedObjectRelationList' ), 'enabled' )}
-        <label>{'Type'|i18n( 'design/standard/class/datatype' )}:</label>
-        <select name="ContentClass_ezobjectrelationlist_type_{$class_attribute.id}">
-        <option value="0" {section show=eq( $type, 0 )}selected="selected"{/section}>{'New and existing objects'|i18n( 'design/standard/class/datatype' )}</option>
-        <option value="1" {section show=eq( $type, 1 )}selected="selected"{/section}>{'Only new objects'|i18n( 'design/standard/class/datatype' )}</option>
-        <option value="2" {section show=eq( $type, 2 )}selected="selected"{/section}>{'Only existing objects'|i18n( 'design/standard/class/datatype' )}</option>
-        </select>
-    {section-else}
-        <input type="hidden" name="ContentClass_ezobjectrelationlist_type_{$class_attribute.id}" value="2" />
-    {/section}
+        {if eq( $xreference, 'selection' )}
+        <table class="list" cellspacing="0">
+        <tr>
+            <th class="tight">&nbsp;</th>
+            <th>{'Option'|i18n( 'design/standard/class/datatype' )}</th>
+        </tr>
+        {foreach $class_attribute.content.xreference_options as $option}
+        <tr>
+            <td><input type="checkbox" name="ContentClass_ezobjectrelationlist_xreferenceoption_remove_array_{$class_attribute.id}[{$option|wash()}]" value="1" title="{'Select option for removal.'|i18n( 'design/standard/class/datatype' )}" /></td>
+            <td><input class="box" type="text" name="ContentClass_ezobjectrelationlist_xreferenceoption_array_{$class_attribute.id}[{$option|wash()}]" value="{$option|wash()}" /></td>
+        </tr>
+        {/foreach}
+        </table>
+        {/if}
+
+        {* Buttons. *}
+        {if $class_attribute.content.xreference_options}
+        <input class="button" type="submit" name="ContentClass_ezobjectrelationlist_xreferenceoption_remove_button_{$class_attribute.id}" value="{'Remove selected'|i18n( 'design/standard/class/datatype' )}" title="{'Remove selected options.'|i18n( 'design/standard/class/datatype' )}" />
+        {else}
+        <input class="button-disabled" type="submit" name="ContentClass_ezselection_removeoption_button_{$class_attribute.id}" value="{'Remove selected'|i18n( 'design/standard/class/datatype' )}" disabled="disabled" />
+        {/if}
+
+        <input class="button" type="submit" name="ContentClass_ezobjectrelationlist_newoption_button_{$class_attribute.id}" value="{'New option'|i18n( 'design/standard/class/datatype' )}" title="{'Add a new option.'|i18n( 'design/standard/class/datatype' )}" />
+    </fieldset>
 </div>
+<div class="block">
+
+{section show=eq( ezini( 'BackwardCompatibilitySettings', 'AdvancedObjectRelationList' ), 'enabled' )}
+<div class="block">
+    <label>{'Type'|i18n( 'design/standard/class/datatype' )}:</label>
+    <select name="ContentClass_ezobjectrelationlist_type_{$class_attribute.id}">
+    <option value="0" {section show=eq( $type, 0 )}selected="selected"{/section}>{'New and existing objects'|i18n( 'design/standard/class/datatype' )}</option>
+    <option value="1" {section show=eq( $type, 1 )}selected="selected"{/section}>{'Only new objects'|i18n( 'design/standard/class/datatype' )}</option>
+    <option value="2" {section show=eq( $type, 2 )}selected="selected"{/section}>{'Only existing objects'|i18n( 'design/standard/class/datatype' )}</option>
+    </select>
+</div>
+{section-else}
+    <input type="hidden" name="ContentClass_ezobjectrelationlist_type_{$class_attribute.id}" value="2" />
+{/section}
 
 <div class="block">
     <label>{'Allowed classes'|i18n( 'design/standard/class/datatype' )}:</label>
@@ -74,7 +93,7 @@
                {$default_location.class_identifier|class_icon( small, $default_location.class_name )}&nbsp;{$default_location.name|wash}
              {/let}
          {/section}
-	 <i>({'See'|i18n( 'design/standard/class/datatype' )} '{'Default location'|i18n( 'design/standard/class/datatype' )}')</i>
+     <i>({'See'|i18n( 'design/standard/class/datatype' )} '{'Default location'|i18n( 'design/standard/class/datatype' )}')</i>
      </td>
   </tr>
 </table>
@@ -118,7 +137,3 @@
 
 </div>
 {/let}
-
-
-
-</div>
