@@ -1502,49 +1502,6 @@ class MugoObjectRelationListType extends eZDataType
     }
 
     /*!
-     Returns the meta data used for storing search indexes.
-    */
-    function metaData( $contentObjectAttribute )
-    {
-        return;
-        $metaDataArray = $attributes = array();
-        $content = $contentObjectAttribute->content();
-        foreach( $content['relation_list'] as $relationItem )
-        {
-            $subObjectID = $relationItem['contentobject_id'];
-            if ( !$subObjectID )
-                continue;
-
-            if ( isset( $content['temp'] ) )
-                $attributes = $content['temp'][$subObjectID]['attributes'];
-            else
-            {
-                $subObjectVersion = $relationItem['contentobject_version'];
-                $object = eZContentObject::fetch( $subObjectID );
-                if ( eZContentObject::recursionProtect( $subObjectID ) )
-                {
-                    if ( !$object )
-                    {
-                        continue;
-                    }
-                    $attributes = $object->contentObjectAttributes( true, $subObjectVersion );
-                }
-            }
-
-            $attributeMetaDataArray = eZContentObjectAttribute::metaDataArray( $attributes );
-
-            $metaDataArray = array_merge( $metaDataArray, $attributeMetaDataArray );
-            //retrieve object relationship metadata
-            array_push( $metaDataArray, array(
-                "id"    => "",
-                "text"  => $relationItem["xrefoptionaldata"]
-                ));
-        }
-
-        return $metaDataArray;
-    }
-
-    /*!
      \return string representation of an contentobjectattribute data for simplified export
 
     */
