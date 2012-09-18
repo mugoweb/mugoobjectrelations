@@ -79,18 +79,6 @@ class MugoObjectRelationListType extends eZDataType
         $postVariableName = $base . "_data_object_relation_list_" . $contentObjectAttribute->attribute( "id" );
         $contentClassAttribute = $contentObjectAttribute->contentClassAttribute();
         $classContent = $contentClassAttribute->content();
-        // Check if selection type is not browse
-        if ( $classContent['selection_type'] != 0 )
-        {
-            $selectedObjectIDArray = $http->hasPostVariable( $postVariableName ) ? $http->postVariable( $postVariableName ) : false;
-            if ( $contentObjectAttribute->validateIsRequired() and $selectedObjectIDArray === false )
-            {
-                $contentObjectAttribute->setValidationError( ezi18n( 'kernel/classes/datatypes',
-                                                                     'Missing objectrelation list input.' ) );
-                return eZInputValidator::STATE_INVALID;
-            }
-            return $status;
-        }
 
         $content = $contentObjectAttribute->content();
         if ( $contentObjectAttribute->validateIsRequired() and count( $content['relation_list'] ) == 0 )
@@ -192,38 +180,6 @@ class MugoObjectRelationListType extends eZDataType
         $postVariableName = $base . "_data_object_relation_list_" . $contentObjectAttribute->attribute( "id" );
         $contentClassAttribute = $contentObjectAttribute->contentClassAttribute();
         $classContent = $contentClassAttribute->content();
-        // Check if selection type is not browse
-        if ( $classContent['selection_type'] != 0 )
-        {
-            $selectedObjectIDArray = $http->hasPostVariable( $postVariableName ) ? $http->postVariable( $postVariableName ) : false;
-            $priority = 0;
-            // We should clear content
-            $content['relation_list'] = array();
-            // If we got an empty object id list
-            if ( $selectedObjectIDArray === false or ( isset( $selectedObjectIDArray[0] ) and $selectedObjectIDArray[0] == 'no_relation' ) )
-            {
-                $contentObjectAttribute->setContent( $content );
-                $contentObjectAttribute->store();
-                return true;
-            }
-
-            foreach ( $selectedObjectIDArray as $objectID )
-            {
-                // Check if the given object ID has a numeric value, if not go to the next object.
-                if ( !is_numeric( $objectID ) )
-                {
-                    eZDebug::writeError( "Related object ID (objectID): '$objectID', is not a numeric value.",
-                                         "MugoObjectRelationListType::fetchObjectAttributeHTTPInput" );
-
-                    continue;
-                }
-                ++$priority;
-                $content['relation_list'][] = $this->appendObject( $objectID, $priority, $contentObjectAttribute );
-            }
-
-            $contentObjectAttribute->setContent( $content );
-            return true;
-        }
 
         $contentObjectAttributeID = $contentObjectAttribute->attribute( 'id' );
 
@@ -638,12 +594,49 @@ class MugoObjectRelationListType extends eZDataType
             $type = $http->postVariable( $typeVariable );
             $content['type'] = $type;
         }
-        $selectionTypeVariable = 'ContentClass_mugoobjectrelationlist_selection_type_' . $classAttribute->attribute( 'id' );
-        if ( $http->hasPostVariable( $selectionTypeVariable ) )
+        $xReferenceVariable = 'ContentClass_mugoobjectrelationlist_xreference_type_' . $classAttribute->attribute( 'id' );
+        if ( $http->hasPostVariable( $xReferenceVariable ) )
         {
-            $selectionType = $http->postVariable( $selectionTypeVariable );
-            $content['selection_type'] = $selectionType;
+            $xReferenceType = $http->postVariable( $xReferenceVariable );
+            $content['xreference_type']     = $xReferenceType;
+            if( $xReferenceType == 'selection' )
+            {
+                //the xreference will be displayed as a dropdown, save the options
+                if ( $http->hasPostVariable( $base . "_ezobjectrelationlist_xreferenceoption_array_" . $classAttribute->attribute( 'id' ) ) )
+                {
+                    $content['xreference_options'] = $http->postVariable( $base . "_ezobjectrelationlist_xreferenceoption_array_" . $classAttribute->attribute( 'id' ) );
+
+                    /*/ Fill in new names for optionsxreference_options
+                    foreach ( array_keys( $content['xreference_options'] ) as $key )
+                    {
+                        $content['xreference_options'][$key]['name'] = $nameArray[$content['xreference_options'][$key]['id']];
+                    }
+                    */
+                }
+
+                if ( $http->hasPostVariable( $base . "_ezobjectrelationlist_newoption_button_" . $classAttribute->attribute( 'id' ) ) )
+                {
+                    $content['xreference_options'][] = '';
+                }
+
+                if ( $http->hasPostVariable( $base . "_ezobjectrelationlist_xreferenceoption_remove_button_" . $classAttribute->attribute( 'id' ) ) )
+                {
+                    if ( $http->hasPostVariable( $base . "_ezobjectrelationlist_xreferenceoption_remove_array_". $classAttribute->attribute( 'id' ) ) )
+                    {
+                        $removeArray = $http->postVariable( $base . "_ezobjectrelationlist_xreferenceoption_remove_array_". $classAttribute->attribute( 'id' ) );
+
+                        foreach ( $content['xreference_options'] as $option )
+                        {
+                            if ( isset( $removeArray[ $option ] ) && $removeArray[ $option ] )
+                            {
+                                unset( $content['xreference_options'][ $option ] );
+                            }
+                        }
+                    }
+                }
+            }
         }
+
         $objectClassVariable = 'ContentClass_ezobjectrelation_object_class_' . $classAttribute->attribute( 'id' );
         if ( $http->hasPostVariable( $objectClassVariable ) )
         {
@@ -747,9 +740,20 @@ class MugoObjectRelationListType extends eZDataType
         $constraintType = $doc->createElement( 'type' );
         $constraintType->setAttribute( 'value', $content['type'] );
         $root->appendChild( $constraintType );
-        $selectionType = $doc->createElement( 'selection_type' );
-        $selectionType->setAttribute( 'value', $content['selection_type'] );
-        $root->appendChild( $selectionType );
+        $xReferenceType = $doc->createElement( 'xreference_type' );
+        $xReferenceType->setAttribute( 'value', $content['xreference_type'] );
+        $root->appendChild( $xReferenceType );
+        if( $content['xreference_type'] == 'selection' )
+        {
+            $xReferenceOptions = $doc->createElement( 'xreference_options' );
+            foreach ( $content['xreference_options'] as $option )
+            {
+                $xReferenceOption = $doc->createElement( 'xreference_option' );
+                $xReferenceOption->setAttribute( 'value', $option );
+                $xReferenceOptions->appendChild( $xReferenceOption );
+            }
+            $root->appendChild( $xReferenceOptions );
+        }
         $objectClass = $doc->createElement( 'object_class' );
         $objectClass->setAttribute( 'value', $content['object_class'] );
         $root->appendChild( $objectClass );
@@ -1366,7 +1370,8 @@ class MugoObjectRelationListType extends eZDataType
     function defaultClassAttributeContent()
     {
         return array( 'object_class' => '',
-                      'selection_type' => 0,
+                      'xreference_type' => 'text',
+                      'xreference_options' => array(),
                       'type' => 0,
                       'class_constraint_list' => array(),
                       'default_placement' => false );
@@ -1377,6 +1382,9 @@ class MugoObjectRelationListType extends eZDataType
         return array( 'relation_list' => array() );
     }
 
+    /**
+     * takes a DOMDocument from a class definition and parses it into a content array
+     */
     function createClassContentStructure( $doc )
     {
         $content = MugoObjectRelationListType::defaultClassAttributeContent();
@@ -1402,10 +1410,15 @@ class MugoObjectRelationListType extends eZDataType
         {
             $content['type'] = $type->getAttribute( 'value' );
         }
-        $selectionType = $root->getElementsByTagName( 'selection_type' )->item( 0 );
-        if ( $selectionType )
+        $xReferenceType = $root->getElementsByTagName( 'xreference_type' )->item( 0 );
+        if ( $xReferenceType )
         {
-            $content['selection_type'] = $selectionType->getAttribute( 'value' );
+            $content['xreference_type'] = $xReferenceType->getAttribute( 'value' );
+        }
+        $xReferenceOptions = $root->getElementsByTagName( 'xreference_option' );
+        foreach ( $xReferenceOptions as $xReferenceOption )
+        {
+            $content['xreference_options'][] = $xReferenceOption->getAttribute( 'value' );
         }
         $objectClass = $root->getElementsByTagName( 'object_class' )->item( 0 );
         if ( $objectClass )
@@ -1486,48 +1499,6 @@ class MugoObjectRelationListType extends eZDataType
                 eZDebug::writeError( "Unknown objectrelationlist action '$action'", 'eZContentObjectRelationListType::customClassAttributeHTTPAction' );
             } break;
         }
-    }
-
-    /*!
-     Returns the meta data used for storing search indexes.
-    */
-    function metaData( $contentObjectAttribute )
-    {
-        $metaDataArray = $attributes = array();
-        $content = $contentObjectAttribute->content();
-        foreach( $content['relation_list'] as $relationItem )
-        {
-            $subObjectID = $relationItem['contentobject_id'];
-            if ( !$subObjectID )
-                continue;
-
-            if ( isset( $content['temp'] ) )
-                $attributes = $content['temp'][$subObjectID]['attributes'];
-            else
-            {
-                $subObjectVersion = $relationItem['contentobject_version'];
-                $object = eZContentObject::fetch( $subObjectID );
-                if ( eZContentObject::recursionProtect( $subObjectID ) )
-                {
-                    if ( !$object )
-                    {
-                        continue;
-                    }
-                    $attributes = $object->contentObjectAttributes( true, $subObjectVersion );
-                }
-            }
-
-            $attributeMetaDataArray = eZContentObjectAttribute::metaDataArray( $attributes );
-
-            $metaDataArray = array_merge( $metaDataArray, $attributeMetaDataArray );
-            //retrieve object relationship metadata
-            array_push( $metaDataArray, array(
-                "id"    => "",
-                "text"  => $relationItem["xrefoptionaldata"]
-                ));
-        }
-
-        return $metaDataArray;
     }
 
     /*!
@@ -1638,11 +1609,15 @@ class MugoObjectRelationListType extends eZDataType
             $classConstraintsNode->appendChild( $classConstraintNode );
         }
 
-        if ( isset( $content['selection_type'] ) && is_numeric( $content['selection_type'] ) )
+        $xReferenceTypeNode = $dom->createElement( 'xreference_type' );
+        $xReferenceTypeNode->appendChild( $dom->createTextNode( $content['xreference_type'] ) );
+        $attributeParametersNode->appendChild( $xReferenceTypeNode );
+
+        if ( isset( $content['xreference_options'] ) )
         {
-            $selectionTypeNode = $dom->createElement( 'selection-type' );
-            $selectionTypeNode->appendChild( $dom->createTextNode( $content['selection_type'] ) );
-            $attributeParametersNode->appendChild( $selectionTypeNode );
+            $xReferenceOptionsNode = $dom->createElement( 'xreference_options' );
+            $xReferenceOptionsNode->appendChild( $dom->createTextNode( $content['xreference_options'] ) );
+            $attributeParametersNode->appendChild( $xReferenceOptionsNode );
         }
 
         if ( isset( $content['object_class'] ) && is_numeric( $content['object_class'] ) )
@@ -1679,10 +1654,16 @@ class MugoObjectRelationListType extends eZDataType
             $content['object_class'] = $objectClassNode->textContent;
         }
 
-        $selectionTypeNode = $attributeParametersNode->getElementsByTagName( 'selection-type' )->item( 0 );
-        if ( $selectionTypeNode )
+        $xReferenceTypeNode = $attributeParametersNode->getElementsByTagName( 'xreference_type' )->item( 0 );
+        if ( $xReferenceTypeNode )
         {
-            $content['selection_type'] = $selectionTypeNode->textContent;
+            $content['xreference_type'] = $xReferenceTypeNode->textContent;
+        }
+
+        $xReferenceOptionsNode = $attributeParametersNode->getElementsByTagName( 'xreference_options' );
+        foreach( $xReferenceOptionsNode as $option )
+        {
+            $content['xreference_options'][] = $option->getAttribute( 'value' );
         }
 
         $classAttribute->setContent( $content );
