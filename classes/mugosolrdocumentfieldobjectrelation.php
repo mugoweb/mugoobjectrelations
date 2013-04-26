@@ -8,32 +8,6 @@ class mugoSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
     }
 
     /**
-     * Get collection data. Returns list of ezfSolrDocumentFieldBase documents.
-     *
-     * @return array List of ezfSolrDocumentFieldBase objects.
-     */
-    public function getCollectionData()
-    {
-        $returnList = array();
-
-        $content = $this->ContentObjectAttribute->content();
-        foreach( $content['relation_list'] as $relationItem )
-        {
-            $subObjectID = $relationItem['contentobject_id'];
-            if ( !$subObjectID )
-                continue;
-            $subObject = eZContentObjectVersion::fetchVersion( $relationItem['contentobject_version'], $subObjectID );
-            if ( !$subObject )
-                continue;
-
-            $returnList = array_merge( $this->getBaseList( $subObject ),
-                                       $returnList );
-        }
-
-        return $returnList;
-    }
-
-    /**
      * Get data to index, and field name to use. Returns an associative array
      * with field name and field value.
      * Example:
@@ -48,49 +22,49 @@ class mugoSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
         $ccAttribute    = $this->ContentObjectAttribute->attribute( 'contentclass_attribute' );
         $fieldName      = self::getFieldName( $ccAttribute );
         $content        = $this->ContentObjectAttribute->attribute( 'content' );
+        $fieldArray     = array( $fieldName => '' );
+
         foreach( $content[ 'relation_list' ] as $relationItem )
         {
-            $subObjectID = $relationItem['contentobject_id'];
-            if ( !$subObjectID )
+            $objectID = $relationItem['contentobject_id'];
+            if ( !$objectID )
+            {
                 continue;
-
-            $subObjectVersion = $relationItem['contentobject_version'];
-            $object = eZContentObject::fetch( $subObjectID );
-            if( eZContentObject::recursionProtect( $subObjectID ) )
-            {
-                if ( !$object )
-                {
-                    continue;
-                }
-                $metaData[] = trim( $object->attribute( 'name' ) ) . " " . trim( $relationItem["xrefoptionaldata"] );
             }
-        }
 
-        return array( $fieldName => $metaData );
-    }
+            $object = eZContentObject::fetch( $objectID );
 
-    /**
-     * Get ezfSolrDocumentFieldBase instances for all attributes of specified eZContentObjectVersion
-     *
-     * @param eZContentObjectVersion Instance of eZContentObjectVersion to fetch attributes from.
-     *
-     * @return array List of ezfSolrDocumentFieldBase instances.
-     */
-    function getBaseList( eZContentObjectVersion $objectVersion )
-    {
-        $returnList = array();
-        // Get ezfSolrDocumentFieldBase instance for all attributes in related object
-        if ( eZContentObject::recursionProtect( $this->ContentObjectAttribute->attribute( 'contentobject_id' ) ) )
-        {
-            foreach( $objectVersion->contentObjectAttributes( $this->ContentObjectAttribute->attribute( 'language_code' ) ) as $attribute )
+            if ( !$object )
             {
-                if ( $attribute->attribute( 'contentclass_attribute' )->attribute( 'is_searchable' ) )
+                continue;
+            }
+            $fieldArray[$fieldName] .= trim( $object->attribute( 'name' ) ) . ' ';
+
+            if( $relationItem['extra_fields'] )
+            {
+                foreach( $relationItem['extra_fields'] as $extraFieldKey => $extraFieldValue )
                 {
-                    $returnList[] = ezfSolrDocumentFieldBase::getInstance( $attribute );
+                    // Storing a selection
+                    if( is_array( $extraFieldValue ) && isset( $extraFieldValue['identifier'] ) )
+                    {
+                        $extraFieldValue = $extraFieldValue['identifier'];
+                    }
+                    // As a multi-string it won't end up in ez_df_text
+                    $subAttributeFieldName = self::generateSubattributeFieldName( $ccAttribute, $extraFieldKey, 'string' );
+                    $fieldArray[$subAttributeFieldName][] = $extraFieldValue;
                 }
             }
+
+            // Add meta fields of the related object
+            $metaAttributeValues = eZSolr::getMetaAttributesForObject( $object );
+            foreach( $metaAttributeValues as $metaInfo )
+            {
+                $fieldArray[ezfSolrDocumentFieldBase::generateSubmetaFieldName( $metaInfo['name'], $ccAttribute )][] = ezfSolrDocumentFieldBase::preProcessValue( $metaInfo['value'], $metaInfo['fieldType'] );
+            }
         }
-        return $returnList;
+        $fieldArray[$fieldName] = trim( $fieldArray[$fieldName] );
+
+        return $fieldArray;
     }
 }
 
