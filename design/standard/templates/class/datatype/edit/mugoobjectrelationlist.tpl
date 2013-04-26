@@ -1,62 +1,165 @@
-<!-- class / edit -->
+{* Class attribute edit template *}
+{def $data_type_string = 'mugoobjectrelationlist'}
 {let content=$class_attribute.content
      class_list=$content.class_constraint_list
      default_placement=$content.default_placement
      type=$content.type
      all_class_list=fetch( class, list )
-     xreference=$content.xreference_type}
+    extra_fields=$content.extra_fields}
 
 <div class="block">
     <br />
     <fieldset>
-        {*$class_attribute.content.xreference_options|attribute(show,2)*}
-        <legend>{'X-Reference data type:'|i18n( 'design/standard/class/datatype' )}</legend>
-        <input type="radio" name="ContentClass_mugoobjectrelationlist_xreference_type_{$class_attribute.id}" value="text" {if or( eq( $xreference, 'text'), ne( $xreference, 'selection' ))}checked{/if} /> Open text<br />
-        <input type="radio" name="ContentClass_mugoobjectrelationlist_xreference_type_{$class_attribute.id}" value="selection" {if eq( $xreference, 'selection' )}checked{/if} /> Selection
-
-        {if eq( $xreference, 'selection' )}
-        <table class="list" cellspacing="0">
-        <tr>
-            <th class="tight">&nbsp;</th>
-            <th>{'Option'|i18n( 'design/standard/class/datatype' )}</th>
-        </tr>
-        {foreach $class_attribute.content.xreference_options as $option}
-        <tr>
-            <td><input type="checkbox" name="ContentClass_ezobjectrelationlist_xreferenceoption_remove_array_{$class_attribute.id}[{$option|wash()}]" value="1" title="{'Select option for removal.'|i18n( 'design/standard/class/datatype' )}" /></td>
-            <td><input class="box" type="text" name="ContentClass_ezobjectrelationlist_xreferenceoption_array_{$class_attribute.id}[{$option|wash()}]" value="{$option|wash()}" /></td>
-        </tr>
-        {/foreach}
-        </table>
-        {/if}
-
-        {* Buttons. *}
-        {if $class_attribute.content.xreference_options}
-        <input class="button" type="submit" name="ContentClass_ezobjectrelationlist_xreferenceoption_remove_button_{$class_attribute.id}" value="{'Remove selected'|i18n( 'design/standard/class/datatype' )}" title="{'Remove selected options.'|i18n( 'design/standard/class/datatype' )}" />
-        {else}
-        <input class="button-disabled" type="submit" name="ContentClass_ezselection_removeoption_button_{$class_attribute.id}" value="{'Remove selected'|i18n( 'design/standard/class/datatype' )}" disabled="disabled" />
-        {/if}
-
-        <input class="button" type="submit" name="ContentClass_ezobjectrelationlist_newoption_button_{$class_attribute.id}" value="{'New option'|i18n( 'design/standard/class/datatype' )}" title="{'Add a new option.'|i18n( 'design/standard/class/datatype' )}" />
+            <legend>{'Extra Fields'|i18n( 'design/standard/class/datatype' )}</legend>
+        <div>
+            <table>
+                {def $fieldNumber = 0}
+                {def $optionNumber = 0}
+                {foreach $extra_fields as $fieldIdentifier => $field}
+                    {set $optionNumber = 0}
+                    <tr id="extra_field_{$class_attribute.id}_{$fieldNumber}">
+                        <td style="vertical-align: top;">
+                            <input
+                                type="button"
+                                class="button"
+                                onclick="$('#extra_field_{$class_attribute.id}_{$fieldNumber}').empty().remove();$('#extra_field_options_{$class_attribute.id}_{$fieldNumber}').empty().remove();"
+                                value="Delete"
+                            />
+                        </td>
+                        <td style="vertical-align: top;">
+                            <label>
+                                Name: <input id="ContentClass_{$data_type_string}_extra_fields_name_{$class_attribute.id}_{$fieldNumber}" type="text" name="ContentClass_{$data_type_string}_extra_fields_name_{$class_attribute.id}[{$fieldNumber}]" value="{$field.name}"/>
+                            </label>
+                        </td>
+                        <td style="vertical-align: top;">
+                            <label>
+                                Identifier: <input type="text" name="ContentClass_{$data_type_string}_extra_fields_identifier_{$class_attribute.id}[{$fieldNumber}]" value="{$fieldIdentifier}"/>
+                            </label>
+                        </td>
+                        <td style="vertical-align: top;">
+                            <table>
+                                <tr>
+                                    <td>
+                                        <label>
+                                            <input type="radio"
+                                                   name="ContentClass_{$data_type_string}_extra_fields_type_{$class_attribute.id}[{$fieldNumber}]"
+                                                   value="text" {if eq($field.type, "text")}checked{/if}
+                                                   onclick="$('#ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}').hide();"
+                                                   />
+                                            Open text
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label>
+                                            <input type="radio"
+                                                   name="ContentClass_{$data_type_string}_extra_fields_type_{$class_attribute.id}[{$fieldNumber}]"
+                                                   value="selection" {if ne($field.type, "text")}checked{/if}
+                                                   onclick="$('#ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}').show();"
+                                                   />
+                                            Selection
+                                        </label>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr id="extra_field_options_{$class_attribute.id}_{$fieldNumber}"><td></td>
+                        <td colspan="3">
+                            {if eq($field.type, "text")}
+                                <div id="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}" style="display: none;">
+                            {else}
+                                <div id="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}" style="">
+                            {/if}
+                                <div id="newFields_{$class_attribute.id}_{$fieldNumber}">
+                                    {foreach $field.options as $option_key => $option}
+                                        <div id="newOption{$class_attribute.id}_{$fieldNumber}_{$optionNumber}">
+                                            <label for="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}_name" style="display: inline;" >
+                                                Selection name:
+                                            </label>
+                                            <input
+                                                id="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}_name"
+                                                name="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}_name[]"
+                                                type="text"
+                                                size="20"
+                                                value="{$option}"
+                                                />
+                                            <label for="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}_identifier" style="display: inline;" >
+                                                Selection identifier:
+                                            </label>
+                                            <input
+                                                id="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}_identifier"
+                                                name="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}_identifier[]"
+                                                type="text"
+                                                size="20"
+                                                value="{$option_key}"
+                                            />
+                                            <input type="button" class="button" onclick="$('#newOption{$class_attribute.id}_{$fieldNumber}_{$optionNumber}').empty().remove();" value="Delete"/>
+                                        </div>
+                                        {set $optionNumber = $optionNumber|inc()}
+                                    {/foreach}
+                                </div>
+                                <input
+                                    class="button"
+                                    type="button"
+                                    name="ContentClass_{$data_type_string}_newoption_button_{$class_attribute.id}"
+                                    title="{'Add a new option.'|i18n( 'design/standard/class/datatype' )}"
+                                    onclick="addNewOption('#newFields_{$class_attribute.id}_{$fieldNumber}','ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}');"
+                                    value="{'New option'|i18n( 'design/standard/class/datatype' )}"
+                                />
+                            </div>
+                        </td>
+                    </tr>
+                    {set $fieldNumber = $fieldNumber|inc()}
+                {/foreach}
+            </table>
+        </div>
+        <script type="text/javascript">
+            {literal}
+            window.idCounter = 0;
+            function addNewOption(element, myId) {
+                window.idCounter++;
+                console.log('idCounter: ' + window.idCounter);
+                $(element)
+                .append($('<div />', {id:'newOption'+idCounter})
+                    .append($('<label>', {for: myId + '_name' + window.idCounter, style:'display:inline;'}).text('Selection name: '))
+                    .append($('<input />', {type: 'text', id: myId+'_name' + window.idCounter, name: myId + '_name[]', size: 40}))
+                    .append(' ')
+                    .append($('<label>', {for: myId + '_identifier' + window.idCounter, style:'display:inline;'}).text('Selection identifier: '))
+                    .append($('<input />', {type: 'text', id: myId + '_identifier' + window.idCounter, name: myId + '_identifier[]', size: 40}))
+                    .append(' ')
+                    .append($('<input />', {type: 'button', class: 'button', onclick: "$('#newOption" + window.idCounter + "').empty().remove();", value: 'Delete'}))
+                );
+            }
+            {/literal}
+        </script>
     </fieldset>
+    <div style="margin-top: 3px;">
+        <input
+            class="button"
+            type="submit"
+            name="ContentClass_{$data_type_string}_newfield_button_{$class_attribute.id}"
+            value="{'New field'|i18n( 'design/standard/class/datatype' )}"
+            title="{'Add a new field.'|i18n( 'design/standard/class/datatype' )}" />
+    </div>
 </div>
 <div class="block">
 
 {section show=eq( ezini( 'BackwardCompatibilitySettings', 'AdvancedObjectRelationList' ), 'enabled' )}
 <div class="block">
     <label>{'Type'|i18n( 'design/standard/class/datatype' )}:</label>
-    <select name="ContentClass_ezobjectrelationlist_type_{$class_attribute.id}">
+    <select name="ContentClass_{$data_type_string}_type_{$class_attribute.id}">
     <option value="0" {section show=eq( $type, 0 )}selected="selected"{/section}>{'New and existing objects'|i18n( 'design/standard/class/datatype' )}</option>
     <option value="1" {section show=eq( $type, 1 )}selected="selected"{/section}>{'Only new objects'|i18n( 'design/standard/class/datatype' )}</option>
     <option value="2" {section show=eq( $type, 2 )}selected="selected"{/section}>{'Only existing objects'|i18n( 'design/standard/class/datatype' )}</option>
     </select>
 </div>
 {section-else}
-    <input type="hidden" name="ContentClass_ezobjectrelationlist_type_{$class_attribute.id}" value="2" />
+    <input type="hidden" name="ContentClass_{$data_type_string}_type_{$class_attribute.id}" value="2" />
 {/section}
 
 <div class="block">
     <label>{'Allowed classes'|i18n( 'design/standard/class/datatype' )}:</label>
-    <select name="ContentClass_ezobjectrelationlist_class_list_{$class_attribute.id}[]" multiple="multiple" title="{'Select which classes user can create'|i18n( 'design/standard/class/datatype' )}">
+    <select name="ContentClass_{$data_type_string}_class_list_{$class_attribute.id}[]" multiple="multiple" title="{'Select which classes user can create'|i18n( 'design/standard/class/datatype' )}">
     <option value="" {section show=$class_list|lt(1)}selected="selected"{/section}>{'Any'|i18n( 'design/standard/class/datatype' )}</option>
     {section name=Class loop=$all_class_list}
     <option value="{$:item.identifier|wash}" {section show=$class_list|contains($:item.identifier)}selected="selected"{/section}>{$:item.name}</option>
@@ -73,7 +176,7 @@
          <p>{'Object class'|i18n( 'design/standard/class/datatype' )}:</p>
      </td>
      <td>
-         <select name="ContentClass_ezobjectrelation_object_class_{$class_attribute.id}">
+         <select name="ContentClass_{$data_type_string}_object_class_{$class_attribute.id}">
          {let classes=fetch( 'class', 'list' )}
          <option value="" {eq( $content.object_class, "" )|choose( '', 'selected="selected"' )}>{'(none)'|i18n('design/standard/class/datatype')}</option>
          {section loop=$:classes}
@@ -119,10 +222,10 @@
 </table>
 {/let}
 
-<input type="hidden" name="ContentClass_ezobjectrelationlist_placement_{$class_attribute.id}" value="{$default_placement.node_id}" />
+<input type="hidden" name="ContentClass_{$data_type_string}_placement_{$class_attribute.id}" value="{$default_placement.node_id}" />
 {section-else}
 <p>{'New objects will not be placed in the content tree.'|i18n( 'design/standard/class/datatype' )}</p>
-<input type="hidden" name="ContentClass_ezobjectrelationlist_placement_{$class_attribute.id}" value="" />
+<input type="hidden" name="ContentClass_{$data_type_string}_placement_{$class_attribute.id}" value="" />
 {/section}
 
 {section show=$default_placement}
