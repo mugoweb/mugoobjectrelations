@@ -1,4 +1,3 @@
-
 <div style="border: solid 1px #ddddee;">
 
 <!-- class / view -->
@@ -77,8 +76,39 @@
 {/section}
 </div>
 
+{* Extra fields *}
+<div class="block">
+    <label>{'Extra fields'|i18n( 'design/standard/class/datatype' )}:</label>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Identifier</th>
+                <th>Type</th>
+                <th>Options</th>
+            </tr>
+        </thead>
+        <tbody>
+            {foreach $content.extra_fields as $extra_field_identifier => $extra_field}
+                <tr>
+                    <td style="vertical-align: top;">{$extra_field.name|wash()}</td>
+                    <td style="vertical-align: top;">{$extra_field_identifier|wash()}</td>
+                    <td style="vertical-align: top;">{$extra_field.type|wash()}</td>
+                    <td style="vertical-align: top;">
+                        {if eq( 'selection', $extra_field.type )}
+                            <ul>
+                                {foreach $extra_field.options as $option_identifier => $option_value}
+                                    <li>{$option_value|wash()} ({$option_identifier|wash()})</li>
+                                {/foreach}
+                            </ul>
+                        {else}
+                            {'n/a'|i18n( 'design/standard/class/datatype' )}
+                        {/if}
+                    </td>
+                </tr>
+            {/foreach}
+        </tbody>
+    </table>
+</div>
 {/let}
-
-
-
 </div>
