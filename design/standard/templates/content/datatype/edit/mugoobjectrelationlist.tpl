@@ -136,7 +136,7 @@
                                         name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($:item.priority)}][{$field_identifier}]"
                                         style="width: 200px;"
                                     >
-                                        <option value="0"></option>
+                                        <option value=""></option>
                                         {foreach $field.options as $option_identifier => $option_value}
                                             <option
                                                 value="{$option_identifier}"
@@ -263,7 +263,7 @@
                                         name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($Objects.item.priority)}][{$field_identifier}]"
                                         style="width: 200px;"
                                     >
-                                        <option value="0"></option>
+                                        <option value=""></option>
                                         {foreach $field.options as $option_identifier => $option_value}
                                             <option value="{$option_identifier}" {if eq( $option_identifier, $Objects.extra_fields[$field_identifier].identifier )} selected="selected"{/if}>{$option_value}</option>
                                         {/foreach}
