@@ -90,6 +90,21 @@ class MugoObjectRelationListType extends eZDataType
                     $content['temp'][$subObjectID]['object'] = $object;
                 }
             }
+            // Check that required extra fields are filled in
+            $extraFieldsBase = $base . '_extra_fields_' . $contentObjectAttribute->attribute( "id" );
+            $postedExtraFields = $http->postVariable( $extraFieldsBase, array() );
+            foreach( $classContent['extra_fields'] as $extraFieldIdentifier => $extraField )
+            {
+                if( $extraField['required'] )
+                {
+                    if( !isset( $postedExtraFields[$i][$extraFieldIdentifier] ) || '' == trim( $postedExtraFields[$i][$extraFieldIdentifier] ) )
+                    {
+                        $contentObjectAttribute->setValidationError( ezpI18n::tr( 'kernel/classes/datatypes',
+                                                                        'Missing ' . $extraField['name'] . ' input.' ) );
+                        return eZInputValidator::STATE_INVALID;
+                    }
+                }
+            }
         }
 
         $contentObjectAttribute->setContent( $content );
@@ -582,12 +597,21 @@ class MugoObjectRelationListType extends eZDataType
             $extraFieldsNames = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_name_" . $classAttribute->attribute( 'id' ) );
             $extraFieldsIdentifiers = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_identifier_" . $classAttribute->attribute( 'id' ) );
             $extraFieldsTypes = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_type_" . $classAttribute->attribute( 'id' ) );
+            $extraFieldsRequired = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_required_" . $classAttribute->attribute( 'id' ), array() );
 
             foreach($extraFieldsNames as $key => $fieldName)
             {
                 $fieldIdentifier = $extraFieldsIdentifiers[$key];
                 $content['extra_fields'][$fieldIdentifier]['name'] = $fieldName;
                 $content['extra_fields'][$fieldIdentifier]['type'] = $extraFieldsTypes[$key];
+                if( isset( $extraFieldsRequired[$key] ) )
+                {
+                    $content['extra_fields'][$fieldIdentifier]['required'] = 1;
+                }
+                else
+                {
+                    $content['extra_fields'][$fieldIdentifier]['required'] = 0;
+                }
 
                 //if type is selection
                 $content['extra_fields'][$fieldIdentifier]['options'] = array();
@@ -749,6 +773,7 @@ class MugoObjectRelationListType extends eZDataType
                 $field->setAttribute( 'name', $extraField['name'] );
                 $field->setAttribute( 'identifier', $extraFieldIdentifier );
                 $field->setAttribute( 'type', $extraField['type'] );
+                $field->setAttribute( 'required', $extraField['required'] );
 
                 if( 'selection' == $extraField['type'] )
                 {
@@ -1538,7 +1563,8 @@ class MugoObjectRelationListType extends eZDataType
             $fieldName = $field->getAttribute( 'name' );
             $fieldIdentifier = $field->getAttribute( 'identifier' );
             $fieldType = $field->getAttribute( 'type' );
-            $content['extra_fields'][$fieldIdentifier] = array( 'name' => $fieldName, 'type' => $fieldType );
+            $fieldRequired = $field->getAttribute( 'required' );
+            $content['extra_fields'][$fieldIdentifier] = array( 'name' => $fieldName, 'type' => $fieldType, 'required' => $fieldRequired );
 
             // get the children (only options for now)
             for( $fieldChildCount = 0; $fieldChildCount < $field->childNodes->length; $fieldChildCount++ )
@@ -1727,6 +1753,7 @@ class MugoObjectRelationListType extends eZDataType
             $options = array();
             foreach( $extraFields as $extraField )
             {
+                // Note that it does not enforce whether a field is required
                 $extraFieldElements = eZStringUtils::explodeStr( $extraField, self::OPTIONSEPARATOR );
                 // Make sure we have a selection item defined
                 if(    isset( $classContent['extra_fields'][$extraFieldElements[0]] )

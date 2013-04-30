@@ -79,13 +79,14 @@
 {* Extra fields *}
 <div class="block">
     <label>{'Extra fields'|i18n( 'design/standard/class/datatype' )}:</label>
-    <table>
+    <table class="list">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Identifier</th>
                 <th>Type</th>
                 <th>Options</th>
+                <th>Required</th>
             </tr>
         </thead>
         <tbody>
@@ -103,6 +104,13 @@
                             </ul>
                         {else}
                             {'n/a'|i18n( 'design/standard/class/datatype' )}
+                        {/if}
+                    </td>
+                    <td style="vertical-align: top;">
+                        {if eq( 1, $extra_field.required )}
+                            Yes
+                        {else}
+                            No
                         {/if}
                     </td>
                 </tr>

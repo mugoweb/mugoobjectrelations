@@ -41,6 +41,15 @@
                                 <tr>
                                     <td>
                                         <label>
+                                            <input type="checkbox"
+                                                   name="ContentClass_{$data_type_string}_extra_fields_required_{$class_attribute.id}[{$fieldNumber}]"
+                                                   value="1" {if eq( $field.required, 1 )}checked{/if}
+                                                   />
+                                            Required
+                                        </label>
+                                    </td>
+                                    <td>
+                                        <label>
                                             <input type="radio"
                                                    name="ContentClass_{$data_type_string}_extra_fields_type_{$class_attribute.id}[{$fieldNumber}]"
                                                    value="text" {if eq($field.type, "text")}checked{/if}
