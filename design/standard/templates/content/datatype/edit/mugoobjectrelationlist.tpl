@@ -125,14 +125,14 @@
 
                         <tr class="{$:sequence}">
                             <td colspan="2" style="text-align: right;">
-                                <label for="field{$attribute.id}{$field_identifier}">
+                                <label for="field{$attribute.id}{$field_identifier}_{$Objects.index}">
                                     {$field.name}:
                                 </label>
                             </td>
                             <td colspan="3">
                                 {if eq( 'selection', $field.type )}
                                     <select
-                                        id="field{$attribute.id}{$field_identifier}"
+                                        id="field{$attribute.id}{$field_identifier}_{$Objects.index}"
                                         name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($:item.priority)}][{$field_identifier}]"
                                         style="width: 200px;"
                                     >
@@ -148,7 +148,7 @@
                                     </select>
                                 {else}
                                     <input
-                                        id="field{$attribute.id}{$field_identifier}"
+                                        id="field{$attribute.id}{$field_identifier}_{$Objects.index}"
                                         name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($:item.priority)}][{$field_identifier}]"
                                         type="text"
                                         style="width: 200px;"
