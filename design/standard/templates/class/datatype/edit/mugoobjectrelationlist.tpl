@@ -19,6 +19,10 @@
                     {set $optionNumber = 0}
                     <tr id="extra_field_{$class_attribute.id}_{$fieldNumber}">
                         <td style="vertical-align: top;">
+                            <img class="mugoobjectrelationlist-move-down" src={'button-move_down.gif'|ezimage()} alt={'Down'|i18n( 'design/standard/class/datatype' )} />
+                            <img class="mugoobjectrelationlist-move-up" src={'button-move_up.gif'|ezimage()} alt={'Up'|i18n( 'design/standard/class/datatype' )} />
+                        </td>
+                        <td style="vertical-align: top;">
                             <input
                                 type="button"
                                 class="button"
@@ -127,7 +131,7 @@
             window.idCounter = 0;
             function addNewOption(element, myId) {
                 window.idCounter++;
-                console.log('idCounter: ' + window.idCounter);
+                //console.log('idCounter: ' + window.idCounter);
                 $(element)
                 .append($('<div />', {id:'newOption'+idCounter})
                     .append($('<label>', {for: myId + '_name' + window.idCounter, style:'display:inline;'}).text('Selection name: '))
@@ -139,6 +143,25 @@
                     .append($('<input />', {type: 'button', class: 'button', onclick: "$('#newOption" + window.idCounter + "').empty().remove();", value: 'Delete'}))
                 );
             }
+            $( document ).ready( function()
+            {
+                $( '.mugoobjectrelationlist-move-down' ).click( function()
+                {
+                    var row = $( this ).closest( 'tr' );
+                    var rowNext = row.next();
+                    // There is a row for the selection options, so move past that one; start with the row closest to where you want to go
+                    rowNext.insertAfter( rowNext.next().next() );
+                    row.insertAfter( row.next().next() );
+                });
+                $( '.mugoobjectrelationlist-move-up' ).click( function()
+                {
+                    var row = $( this ).closest( 'tr' );
+                    var rowNext = row.next();
+                    // There is a row for the selection options, so move past that one
+                    row.insertBefore( row.prev().prev() );
+                    rowNext.insertBefore( rowNext.prev().prev() );
+                });
+            });
             {/literal}
         </script>
     </fieldset>
