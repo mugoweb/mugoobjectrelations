@@ -14,6 +14,7 @@ class MugoObjectRelationListType extends eZDataType
     const FIELDSEPARATOR = "|";
     const OPTIONSEPARATOR = ":";
     const RELATIONSEPARATOR = "&";
+    const EXTRAFIELDSSEPARATOR = "-";
 
     /*!
      Initializes with a string id and a description.
@@ -90,6 +91,7 @@ class MugoObjectRelationListType extends eZDataType
                     $content['temp'][$subObjectID]['object'] = $object;
                 }
             }
+
             // Check that required extra fields are filled in
             $extraFieldsBase = $base . '_extra_fields_' . $contentObjectAttribute->attribute( "id" );
             $postedExtraFields = $http->postVariable( $extraFieldsBase, array() );
@@ -103,6 +105,23 @@ class MugoObjectRelationListType extends eZDataType
                                                                         'Missing ' . $extraField['name'] . ' input.' ) );
                         return eZInputValidator::STATE_INVALID;
                     }
+                }
+            }
+        }
+        
+        // Check that required extra fields (attribute-level) are filled in
+        $extraFieldsBase = $base . '_extra_fields_attribute_level_' . $contentObjectAttribute->attribute( "id" );
+        $postedExtraFields = $http->postVariable( $extraFieldsBase, array() );
+
+        foreach( $classContent['extra_fields_attribute_level'] as $extraFieldIdentifier => $extraField )
+        {
+            if( $extraField['required'] )
+            {
+                if( !isset( $postedExtraFields[$extraFieldIdentifier] ) || '' == trim( $postedExtraFields[$extraFieldIdentifier] ) )
+                {
+                    $contentObjectAttribute->setValidationError( ezpI18n::tr( 'kernel/classes/datatypes',
+                                                                    'Missing ' . $extraField['name'] . ' input.' ) );
+                    return eZInputValidator::STATE_INVALID;
                 }
             }
         }
@@ -246,6 +265,23 @@ class MugoObjectRelationListType extends eZDataType
             $content['relation_list'][$i]['priority'] = $i + 1;
             ++$i;
         }
+        
+        // Store extra fields (attribute-level) fields
+        $extraFieldsBase = $base . '_extra_fields_attribute_level_' . $contentObjectAttributeID;
+        $extraFieldList = array();
+        if( $http->hasPostVariable( $extraFieldsBase ) )
+        {
+            $extraFieldList = $http->postVariable( $extraFieldsBase );
+        }
+        
+        if( $extraFieldList )
+        {
+            foreach( $extraFieldList as $extraFieldIdentifier => $extraFieldValue )
+            {
+                $content['extra_fields_attribute_level'][$extraFieldIdentifier] = self::getContentClassFieldOptionName( $contentObjectAttribute, $extraFieldIdentifier, $extraFieldValue, true );
+            }
+        }
+
         $contentObjectAttribute->setContent( $content );
         return true;
     }
@@ -589,8 +625,8 @@ class MugoObjectRelationListType extends eZDataType
             $content['type'] = $type;
         }
 
-        //Check if do I have fields from before
-        if ( $http->hasPostVariable( $base . "_". self::DATA_TYPE_STRING . "_extra_fields_name_" . $classAttribute->attribute( 'id' ) ) )
+        //Check whether we have the same fields as before
+        if( $http->hasPostVariable( $base . "_". self::DATA_TYPE_STRING . "_extra_fields_name_" . $classAttribute->attribute( 'id' ) ) )
         {
             // Note that we only reset the fields if we have some post information. This means that you cannot remove the last field
             $content['extra_fields'] = array();
@@ -599,7 +635,7 @@ class MugoObjectRelationListType extends eZDataType
             $extraFieldsTypes = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_type_" . $classAttribute->attribute( 'id' ) );
             $extraFieldsRequired = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_required_" . $classAttribute->attribute( 'id' ), array() );
 
-            foreach($extraFieldsNames as $key => $fieldName)
+            foreach( $extraFieldsNames as $key => $fieldName )
             {
                 $fieldIdentifier = $extraFieldsIdentifiers[$key];
                 $content['extra_fields'][$fieldIdentifier]['name'] = $fieldName;
@@ -620,7 +656,7 @@ class MugoObjectRelationListType extends eZDataType
                     //parse the selection variable ContentClass_mugoobjectrelationlist_extra_fields_new_options_424_0_name[]
                     $newOptionsNames = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_new_options_" . $classAttribute->attribute( 'id' ) . "_" . $key . "_name" );
                     $newOptionsIdentifiers = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_new_options_" . $classAttribute->attribute( 'id' ) . "_" . $key . "_identifier" );
-                    foreach($newOptionsNames as $nameKey => $nameValue)
+                    foreach( $newOptionsNames as $nameKey => $nameValue )
                     {
                         $optionIdentifier = $newOptionsIdentifiers[$nameKey];
                         $content['extra_fields'][$fieldIdentifier]['options'][$optionIdentifier] = $newOptionsNames[$nameKey];
@@ -629,8 +665,49 @@ class MugoObjectRelationListType extends eZDataType
                 }
             }
         }
+        
+        //Check whether we have the same fields as before (attribute-level)
+        if( $http->hasPostVariable( $base . "_". self::DATA_TYPE_STRING . "_extra_fields_attribute_level_name_" . $classAttribute->attribute( 'id' ) ) )
+        {
+            // Note that we only reset the fields if we have some post information. This means that you cannot remove the last field
+            $content['extra_fields_attribute_level'] = array();
+            $extraFieldsNames = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_attribute_level_name_" . $classAttribute->attribute( 'id' ) );
+            $extraFieldsIdentifiers = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_attribute_level_identifier_" . $classAttribute->attribute( 'id' ) );
+            $extraFieldsTypes = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_attribute_level_type_" . $classAttribute->attribute( 'id' ) );
+            $extraFieldsRequired = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_attribute_level_required_" . $classAttribute->attribute( 'id' ), array() );
 
-        //Create the new field
+            foreach( $extraFieldsNames as $key => $fieldName )
+            {
+                $fieldIdentifier = $extraFieldsIdentifiers[$key];
+                $content['extra_fields_attribute_level'][$fieldIdentifier]['name'] = $fieldName;
+                $content['extra_fields_attribute_level'][$fieldIdentifier]['type'] = $extraFieldsTypes[$key];
+                if( isset( $extraFieldsRequired[$key] ) )
+                {
+                    $content['extra_fields_attribute_level'][$fieldIdentifier]['required'] = 1;
+                }
+                else
+                {
+                    $content['extra_fields_attribute_level'][$fieldIdentifier]['required'] = 0;
+                }
+
+                //if type is selection
+                $content['extra_fields_attribute_level'][$fieldIdentifier]['options'] = array();
+                if($extraFieldsTypes[$key] == 'selection')
+                {
+                    //parse the selection variable ContentClass_mugoobjectrelationlist_extra_fields_attribute_level_new_options_424_0_name[]
+                    $newOptionsNames = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_attribute_level_new_options_" . $classAttribute->attribute( 'id' ) . "_" . $key . "_name" );
+                    $newOptionsIdentifiers = $http->postVariable( $base . "_" . self::DATA_TYPE_STRING . "_extra_fields_attribute_level_new_options_" . $classAttribute->attribute( 'id' ) . "_" . $key . "_identifier" );
+                    foreach( $newOptionsNames as $nameKey => $nameValue )
+                    {
+                        $optionIdentifier = $newOptionsIdentifiers[$nameKey];
+                        $content['extra_fields_attribute_level'][$fieldIdentifier]['options'][$optionIdentifier] = $newOptionsNames[$nameKey];
+                    }
+
+                }
+            }
+        }
+
+        //Create the new extra field
         if ( $http->hasPostVariable( $base . "_" . self::DATA_TYPE_STRING . "_newfield_button_" . $classAttribute->attribute( 'id' ) ) )
         {
             // Set default values
@@ -640,6 +717,18 @@ class MugoObjectRelationListType extends eZDataType
                ++$fieldIdentifierNum;
             }
             $content['extra_fields']['field_identifier' . $fieldIdentifierNum] = array( 'name' => 'Field Name', 'type' => 'text', 'options' => array() );
+        }
+
+        //Create the new extra field (attribute-level)
+        if ( $http->hasPostVariable( $base . "_" . self::DATA_TYPE_STRING . "_newfield_attribute_level_button_" . $classAttribute->attribute( 'id' ) ) )
+        {
+            // Set default values
+            $fieldIdentifierNum = '';
+            while( isset( $content['extra_fields_attribute_level']['field_identifier' . $fieldIdentifierNum] ) )
+            {
+               ++$fieldIdentifierNum;
+            }
+            $content['extra_fields_attribute_level']['field_identifier' . $fieldIdentifierNum] = array( 'name' => 'Field Name', 'type' => 'text', 'options' => array() );
         }
 
         $objectClassVariable = 'ContentClass_' . self::DATA_TYPE_STRING . '_object_class_' . $classAttribute->attribute( 'id' );
@@ -802,6 +891,51 @@ class MugoObjectRelationListType extends eZDataType
             }
             $root->appendChild( $extraFields );
         }
+        
+        if( isset( $content['extra_fields_attribute_level'] ) )
+        {
+            $extraFields = $doc->createElement( 'extra_fields_attribute_level' );
+            foreach( $content['extra_fields_attribute_level'] as $extraFieldIdentifier => $extraField )
+            {
+                /*
+                <field name="Role" identifier="role" type="selection">
+                    <options><option name="Administrative" identifier="administrative"></option><option name="Artists" identifier="artists"></option></options>
+                </field>
+                */
+                $field = $doc->createElement( 'field' );
+
+                $field->setAttribute( 'name', $extraField['name'] );
+                $field->setAttribute( 'identifier', $extraFieldIdentifier );
+                $field->setAttribute( 'type', $extraField['type'] );
+                $field->setAttribute( 'required', $extraField['required'] );
+
+                if( 'selection' == $extraField['type'] )
+                {
+                    // Create the options
+                    if( !$extraField['options'] )
+                    {
+                        $extraField['options'] = array();
+                    }
+                    $fieldOptions = $doc->createElement( 'options' );
+                    if( $extraField['options'] )
+                    {
+                        foreach( $extraField['options'] as $optionIdentifier => $optionName )
+                        {
+                            $fieldOption = $doc->createElement( 'option' );
+                            $fieldOption->setAttribute( 'name', $optionName );
+                            $fieldOption->setAttribute( 'identifier', $optionIdentifier );
+
+                            $fieldOptions->appendChild( $fieldOption );
+                        }
+                    }
+                    $field->appendChild( $fieldOptions );
+                }
+
+                //Put the elements in the tree
+                $extraFields->appendChild( $field );
+            }
+            $root->appendChild( $extraFields );
+        }
 
         $objectClass = $doc->createElement( 'object_class' );
         $objectClass->setAttribute( 'value', $content['object_class'] );
@@ -865,6 +999,28 @@ class MugoObjectRelationListType extends eZDataType
             $relationList->appendChild( $relationElement );
         }
         $root->appendChild( $relationList );
+        
+        $extraFieldsAttributeLevel = $doc->createElement( 'extra_fields_attribute_level' );
+
+        if( $content['extra_fields_attribute_level'] )
+        {
+            foreach( $content['extra_fields_attribute_level'] as $extraFieldAttributeLevelIdentifier => $extraFieldAttributeLevelValue )
+            {
+                // Storing a selection
+                if( is_array( $extraFieldAttributeLevelValue ) && isset( $extraFieldAttributeLevelValue['identifier'] ) )
+                {
+                    $extraFieldAttributeLevelValue = $extraFieldAttributeLevelValue['identifier'];
+                }
+                
+                $node = $doc->createElement( $extraFieldAttributeLevelIdentifier );
+                $node->setAttribute( 'value', $extraFieldAttributeLevelValue );
+
+                $extraFieldsAttributeLevel->appendChild( $node );
+            }
+        }
+        
+        $root->appendChild( $extraFieldsAttributeLevel );
+
         $doc->appendChild( $root );
         //eZDebug::writeDebug('createObjectDOMDocument END');
         return $doc;
@@ -1205,7 +1361,7 @@ class MugoObjectRelationListType extends eZDataType
     function removeRelationObject( $contentObjectAttribute, $deletionItem )
     {
         //eZDebug::writeDebug('removeRelationObject');
-        if ( MugoObjectRelationListType::isItemPublished( $deletionItem ) )
+        if ( self::isItemPublished( $deletionItem ) )
         {
             return;
         }
@@ -1433,20 +1589,45 @@ class MugoObjectRelationListType extends eZDataType
         $xmlText = $contentObjectAttribute->attribute( 'data_text' );
         if ( trim( $xmlText ) == '' )
         {
-            $objectAttributeContent = MugoObjectRelationListType::defaultObjectAttributeContent();
+            $objectAttributeContent = self::defaultObjectAttributeContent();
             return $objectAttributeContent;
         }
-        $doc = MugoObjectRelationListType::parseXML( $xmlText );
-        $content = MugoObjectRelationListType::createObjectContentStructure( $doc );
+        $doc = self::parseXML( $xmlText );
+        $content = self::createObjectContentStructure( $doc );
+
+        $contentClassAttribute = $contentObjectAttribute->contentClassAttribute();
+        $classContent = $contentClassAttribute->content();
 
         // Get the value of the identifier
         foreach($content['relation_list'] as $relatedItemKey => $relatedItem)
         {
             foreach( $relatedItem['extra_fields'] as $fieldKey => $field )
             {
-                $content['relation_list'][$relatedItemKey]['extra_fields'][$fieldKey] = self::getContentClassFieldOptionName( $contentObjectAttribute, $fieldKey, $field );
+                // Only store the field if it's part of the class definition
+                if( isset( $classContent['extra_fields'][$fieldKey] ) )
+                {
+                    $content['relation_list'][$relatedItemKey]['extra_fields'][$fieldKey] = self::getContentClassFieldOptionName( $contentObjectAttribute, $fieldKey, $field );
+                }
+                else
+                {
+                    unset( $content['relation_list'][$relatedItemKey]['extra_fields'][$fieldKey] );
+                }
             }
         }
+        
+        foreach( $content['extra_fields_attribute_level'] as $fieldKey => $field )
+        {
+            // Only store the field if it's part of the class definition
+            if( isset( $classContent['extra_fields_attribute_level'][$fieldKey] ) )
+            {
+                $content['extra_fields_attribute_level'][$fieldKey] = self::getContentClassFieldOptionName( $contentObjectAttribute, $fieldKey, $field, true );
+            }
+            else
+            {
+                unset( $content['extra_fields_attribute_level'][$fieldKey] );
+            }
+        }
+
         return $content;
     }
 
@@ -1463,21 +1644,39 @@ class MugoObjectRelationListType extends eZDataType
      * @param type $contentObjectAttribute object attribute
      * @param type $fieldIdentifier Field to lookup
      * @param type $fieldValue Identifier of the option to return the name (or text field value)
-     * @return boolean  If found return the name otherwise return false
+     * @param type $isAttributeLevel, defaults to false
+     * @return If found return the name otherwise return false
      */
-    function getContentClassFieldOptionName( $contentObjectAttribute, $fieldIdentifier, $fieldValue )
+    function getContentClassFieldOptionName( $contentObjectAttribute, $fieldIdentifier, $fieldValue, $isAttributeLevel = false )
     {
         $classContent = $contentObjectAttribute->attribute( 'class_content' );
 
-        if( isset( $classContent['extra_fields'][$fieldIdentifier] ) )
+        if( $isAttributeLevel )
         {
-            if( 'selection' == $classContent['extra_fields'][$fieldIdentifier]['type'] )
+            if( isset( $classContent['extra_fields_attribute_level'][$fieldIdentifier] ) )
             {
-                return array( 'value' => $classContent['extra_fields'][$fieldIdentifier]['options'][$fieldValue], 'identifier' => $fieldValue );
+                if( 'selection' == $classContent['extra_fields_attribute_level'][$fieldIdentifier]['type'] )
+                {
+                    return array( 'value' => $classContent['extra_fields_attribute_level'][$fieldIdentifier]['options'][$fieldValue], 'identifier' => $fieldValue );
+                }
+                else
+                {
+                    return $fieldValue;
+                }
             }
-            else
+        }
+        else
+        {
+            if( isset( $classContent['extra_fields'][$fieldIdentifier] ) )
             {
-                return $fieldValue;
+                if( 'selection' == $classContent['extra_fields'][$fieldIdentifier]['type'] )
+                {
+                    return array( 'value' => $classContent['extra_fields'][$fieldIdentifier]['options'][$fieldValue], 'identifier' => $fieldValue );
+                }
+                else
+                {
+                    return $fieldValue;
+                }
             }
         }
     }
@@ -1587,6 +1786,43 @@ class MugoObjectRelationListType extends eZDataType
                 }
             }
         }
+        
+        $fields = $xpath->query('//related-objects/extra_fields_attribute_level/field');
+
+        foreach( $fields as $field )
+        {
+            /*
+                <field name="Role" identifier="role" type="selection">
+                    <options><option name="Administrative" identifier="administrative"></option><option name="Artists" identifier="artists"></option></options>
+                </field>
+            */
+            $fieldName = $field->getAttribute( 'name' );
+            $fieldIdentifier = $field->getAttribute( 'identifier' );
+            $fieldType = $field->getAttribute( 'type' );
+            $fieldRequired = $field->getAttribute( 'required' );
+            $content['extra_fields_attribute_level'][$fieldIdentifier] = array( 'name' => $fieldName, 'type' => $fieldType, 'required' => $fieldRequired );
+
+            // get the children (only options for now)
+            for( $fieldChildCount = 0; $fieldChildCount < $field->childNodes->length; $fieldChildCount++ )
+            {
+                $fieldChild = $field->childNodes->item( $fieldChildCount ); //this is an element
+                $fieldChildName = $fieldChild->tagName;
+                if( 'options' == $fieldChildName )
+                {
+                    if( $fieldChild->childNodes->length > 0 )
+                    {
+                        $options = $fieldChild->childNodes;
+                        for($optionsCount = 0; $optionsCount < $options->length; $optionsCount++)
+                        {
+                            $option = $options->item($optionsCount);
+                            $optionName = $option->getAttribute( 'name' );
+                            $optionIdentifier = $option->getAttribute( 'identifier' );
+                            $content['extra_fields_attribute_level'][$fieldIdentifier]['options'][$optionIdentifier] = $optionName;
+                        }
+                    }
+                }
+            }
+        }
 
         $objectClass = $root->getElementsByTagName( 'object_class' )->item( 0 );
         if ( $objectClass )
@@ -1604,12 +1840,12 @@ class MugoObjectRelationListType extends eZDataType
     {
         //eZDebug::writeDebug('createObjectContentStructure');
 
-        $content = MugoObjectRelationListType::defaultObjectAttributeContent();
+        $content = self::defaultObjectAttributeContent();
         $root = $doc->documentElement;
         $relationList = $root->getElementsByTagName( 'relation-list' )->item( 0 );
         if ( $relationList )
         {
-            $contentObjectArrayXMLMap = MugoObjectRelationListType::contentObjectArrayXMLMap();
+            $contentObjectArrayXMLMap = self::contentObjectArrayXMLMap();
             $relationItems = $relationList->getElementsByTagName( 'relation-item' );
             foreach ( $relationItems as $relationItem )
             {
@@ -1627,11 +1863,12 @@ class MugoObjectRelationListType extends eZDataType
                             {
                                 $node = $fields->childNodes->item( $counter );
                                 $extraFields[$node->tagName] = $node->getAttribute( 'value' );
-                                //look for the value in the list if type is selection
                             }
                             $hash[$attributeKey] = $extraFields;
                         }
-                    }else{
+                    }
+                    else
+                    {
                         $attributeValue = $relationItem->hasAttribute( $attributeXMLName ) ? $relationItem->getAttribute( $attributeXMLName ) : false;
                         $hash[$attributeKey] = $attributeValue;
                     }
@@ -1639,6 +1876,20 @@ class MugoObjectRelationListType extends eZDataType
                 $content['relation_list'][] = $hash;
             }
         }
+
+        $extraFieldsAttributeLevel = $root->getElementsByTagName( 'extra_fields_attribute_level' )->item( 0 );
+
+        if( $extraFieldsAttributeLevel->childNodes->length > 0 )
+        {
+            $extraFields = array();
+            for( $counter = 0; $counter < $extraFieldsAttributeLevel->childNodes->length; $counter++ )
+            {
+                $node = $extraFieldsAttributeLevel->childNodes->item( $counter );
+                $extraFields[$node->tagName] = $node->getAttribute( 'value' );
+            }
+            $content['extra_fields_attribute_level'] = $extraFields;
+        }
+
         return $content;
     }
 
@@ -1687,32 +1938,63 @@ class MugoObjectRelationListType extends eZDataType
     }
 
     /*!
-     \return string representation of an contentobjectattribute data for simplified export
+     \return string representation of a content object attribute data for simplified export
 
     */
     function toString( $contentObjectAttribute )
     {
         //eZDebug::writeDebug('toString');
+        $toString = '';
         $objectAttributeContent = $contentObjectAttribute->attribute( 'content' );
         $objectIDList = array();
         foreach( $objectAttributeContent['relation_list'] as $i => $objectInfo )
         {
-            $objectIDList[$i] = $objectInfo['contentobject_id'] . self::FIELDSEPARATOR;
-            $separator = '';
+            $relationData = array();
+            $relationData[0] = $objectInfo['contentobject_id'];
+            $extraFieldsData = array();
+
             foreach( $objectInfo['extra_fields'] as $extraFieldIdentifier => $extraField )
             {
-                $objectIDList[$i] .= $separator;
 
                 // Output a selection
                 if( is_array( $extraField ) && isset( $extraField['identifier'] ) )
                 {
                     $extraField = $extraField['identifier'];
                 }
-                $objectIDList[$i] .= $extraFieldIdentifier . self::OPTIONSEPARATOR . $extraField;
-                $separator = self::FIELDSEPARATOR;
+
+                $extraFieldsData[] = eZStringUtils::implodeStr( array( $extraFieldIdentifier, $extraField ), self::OPTIONSEPARATOR );
             }
+            
+            $relationData[1] = eZStringUtils::implodeStr( $extraFieldsData, self::FIELDSEPARATOR );
+
+            $objectIDList[] = implode( $relationData, self::FIELDSEPARATOR );
         }
-        return eZStringUtils::implodeStr( $objectIDList, self::RELATIONSEPARATOR );
+
+        $toString = eZStringUtils::implodeStr( $objectIDList, self::RELATIONSEPARATOR );
+        
+        if( $objectAttributeContent['extra_fields_attribute_level'] )
+        {
+            $toString .= self::EXTRAFIELDSSEPARATOR;
+            $extraFieldsAttributeLevelData = array();
+
+            foreach( $objectAttributeContent['extra_fields_attribute_level'] as $extraFieldIdentifier => $extraField )
+            {
+                $fieldSeparator = '';
+                $extraFieldsData = array();
+
+                // Output a selection
+                if( is_array( $extraField ) && isset( $extraField['identifier'] ) )
+                {
+                    $extraField = $extraField['identifier'];
+                }
+                
+                $extraFieldsAttributeLevelData[] = eZStringUtils::implodeStr( array( $extraFieldIdentifier, $extraField ), self::OPTIONSEPARATOR );
+            }
+            
+            $toString .= eZStringUtils::implodeStr( $extraFieldsAttributeLevelData, self::FIELDSEPARATOR );
+        }
+        
+        return $toString;
     }
 
     /**
@@ -1720,29 +2002,35 @@ class MugoObjectRelationListType extends eZDataType
      *
      *
      * <object_id>|Black|nike
+     *  Run a test import
      *  $attributes = array();
      *  $attributes['name'] = 'Name of object';
-     *  $attributes['mugo_object_relations'] = '7878|colour:Black|size:nike|brand:nike&7863|colour:Blue|size:rebook|brand:rebook';
+     *  $attributes['mugo_object_relations'] = '7878|colour:Black|size:nike|brand:nike&7863|colour:Blue|size:reebok|brand:reebok-max_purchases:3|include_brochure:1';
+     *  $attributes['mugo_object_relations'] = '7878|colour:Black|size:nike|brand:nike&7863|colour:Blue|size:reebok|brand:reebok-max_purchases:3|include_brochure:1';
      *  $newNodeID = ContentClass_Handler::create( $attributes, $parentNodeID, $contentClassIdentifier );
      *
      * "&" Relation separator
      * "|" Field separator
      * ":" Option separator
+     * "-" Extra fields (attribute-level) separator
      *
      */
     function fromString( $contentObjectAttribute, $string )
     {
         //eZDebug::writeDebug('fromString START');
-        if($string == '')
+        if( $string == '' )
         {
             //eZDebug::writeDebug('fromString empty string END');
             return true;
         }
 
         $classContent = $contentObjectAttribute->attribute( 'class_content' );
+        
+        // Explode out extra fields (attribute-level)
+        $splitExtraFields = eZStringUtils::explodeStr( $string, self::EXTRAFIELDSSEPARATOR );
 
-        // Explode by Relations
-        $relationList = eZStringUtils::explodeStr( $string, self::RELATIONSEPARATOR );
+        // Explode by relations
+        $relationList = eZStringUtils::explodeStr( $splitExtraFields[0], self::RELATIONSEPARATOR );
 
         //Explode by fields
         foreach($relationList as $relationKey => $relation)
@@ -1750,7 +2038,7 @@ class MugoObjectRelationListType extends eZDataType
             $extraFields = eZStringUtils::explodeStr( $relation, self::FIELDSEPARATOR );
             $objectID[] = array_shift( $extraFields );
 
-            $options = array();
+            $extraFieldArray = array();
             foreach( $extraFields as $extraField )
             {
                 // Note that it does not enforce whether a field is required
@@ -1793,6 +2081,38 @@ class MugoObjectRelationListType extends eZDataType
             {
                 eZDebug::writeWarning( $objectID, "Cannot create relation because object is missing" );
             }
+        }
+
+        // Import extra fields (attribute-level)
+        if( isset( $splitExtraFields[1] ) )
+        {
+            $extraFields = eZStringUtils::explodeStr( $splitExtraFields[1], self::FIELDSEPARATOR );
+            $extraFieldArray = array();
+            foreach( $extraFields as $extraField )
+            {
+                // Note that it does not enforce whether a field is required
+                $extraFieldElements = eZStringUtils::explodeStr( $extraField, self::OPTIONSEPARATOR );
+                // Make sure we have a selection item defined
+                if(    isset( $classContent['extra_fields_attribute_level'][$extraFieldElements[0]] )
+                    && 'selection' == $classContent['extra_fields_attribute_level'][$extraFieldElements[0]]['type']
+                  )
+                {
+                    if( isset( $classContent['extra_fields_attribute_level'][$extraFieldElements[0]]['options'][$extraFieldElements[1]] ) )
+                    {
+                        $extraFieldArray[$extraFieldElements[0]] = $extraFieldElements[1];
+                    }
+                    else
+                    {
+                        eZDebug::writeWarning( $extraFieldElements[1], 'No such selection option defined' );
+                    }
+                }
+                else
+                {
+                    $extraFieldArray[$extraFieldElements[0]] = $extraFieldElements[1];
+                }
+            }
+            
+            $content['extra_fields_attribute_level'] = $extraFieldArray;
         }
 
         $contentObjectAttribute->setContent( $content );
@@ -1864,7 +2184,7 @@ class MugoObjectRelationListType extends eZDataType
             $classConstraintsNode->appendChild( $classConstraintNode );
         }
 
-        //Serialize the extrafields
+        //Serialize the extra fields
 
         if ( isset( $content['extra_fields'] ) )
         {

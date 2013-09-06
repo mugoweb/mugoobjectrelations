@@ -63,6 +63,23 @@ class mugoSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
             }
         }
         $fieldArray[$fieldName] = trim( $fieldArray[$fieldName] );
+        
+        // Add extra fields (attribute-level)
+        if( $content['extra_fields_attribute_level'] )
+        {
+            foreach( $content['extra_fields_attribute_level'] as $extraFieldKey => $extraFieldValue )
+            {
+                // Storing a selection
+                if( is_array( $extraFieldValue ) && isset( $extraFieldValue['identifier'] ) )
+                {
+                    $extraFieldValue = $extraFieldValue['identifier'];
+                }
+                // As a multi-string it won't end up in ez_df_text
+                // Limitation: attribute identifiers for extra fields (relation-level) should be unique from identifiers for extra fields (attribute-level)
+                $subAttributeFieldName = self::generateSubattributeFieldName( $ccAttribute, $extraFieldKey, 'string' );
+                $fieldArray[$subAttributeFieldName] = $extraFieldValue;
+            }
+        }
 
         return $fieldArray;
     }

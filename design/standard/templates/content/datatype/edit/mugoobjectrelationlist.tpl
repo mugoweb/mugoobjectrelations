@@ -11,6 +11,48 @@
     {/if}
     {* Optional controls. *}
     {include uri='design:content/datatype/edit/mugoobjectrelationlist_controls.tpl'}
+    
+    {* Extra fields (attribute-level) *}
+    {if $attribute.class_content.extra_fields_attribute_level}
+        <table>
+            {foreach $attribute.class_content.extra_fields_attribute_level as $field_identifier => $field}
+                <tr>
+                    <td colspan="2" style="text-align: right;">
+                        <label for="extra_field_attribute_level_{$attribute.id}{$field_identifier}">
+                            {$field.name}:
+                        </label>
+                    </td>
+                    <td colspan="3">
+                        {if eq( 'selection', $field.type )}
+                            <select
+                                id="extra_field_attribute_level_{$attribute.id}{$field_identifier}"
+                                name="{$attribute_base}_extra_fields_attribute_level_{$attribute.id}[{$field_identifier}]"
+                                style="width: 200px;"
+                            >
+                                <option value=""></option>
+                                {foreach $field.options as $option_identifier => $option_value}
+                                    <option
+                                        value="{$option_identifier}"
+                                        {if eq( $option_identifier, $attribute.content.extra_fields_attribute_level[$field_identifier].identifier )} selected="selected"{/if}
+                                        >
+                                        {$option_value}
+                                    </option>
+                                {/foreach}
+                            </select>
+                        {else}
+                            <input
+                                id="extra_field_attribute_level_{$attribute.id}{$field_identifier}"
+                                name="{$attribute_base}_extra_fields_attribute_level_{$attribute.id}[{$field_identifier}]"
+                                type="text"
+                                style="width: 200px;"
+                                value="{$attribute.content.extra_fields_attribute_level[$field_identifier]|wash()}"
+                                />
+                        {/if}
+                    </td>
+                </tr>
+            {/foreach}
+        </table>
+    {/if}
 
     {* Advanced interface. *}
     {section show=eq( ezini( 'BackwardCompatibilitySettings', 'AdvancedObjectRelationList' ), 'enabled' )}
@@ -125,14 +167,14 @@
 
                         <tr class="{$:sequence}">
                             <td colspan="2" style="text-align: right;">
-                                <label for="field{$attribute.id}{$field_identifier}_{$Objects.index}">
+                                <label for="field{$attribute.id}{$field_identifier}">
                                     {$field.name}:
                                 </label>
                             </td>
                             <td colspan="3">
                                 {if eq( 'selection', $field.type )}
                                     <select
-                                        id="field{$attribute.id}{$field_identifier}_{$Objects.index}"
+                                        id="field{$attribute.id}{$field_identifier}"
                                         name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($:item.priority)}][{$field_identifier}]"
                                         style="width: 200px;"
                                     >
@@ -148,11 +190,11 @@
                                     </select>
                                 {else}
                                     <input
-                                        id="field{$attribute.id}{$field_identifier}_{$Objects.index}"
+                                        id="field{$attribute.id}{$field_identifier}"
                                         name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($:item.priority)}][{$field_identifier}]"
                                         type="text"
                                         style="width: 200px;"
-                                        value="{$:item.extra_fields[$field_identifier]}"
+                                        value="{$:item.extra_fields[$field_identifier]|wash()}"
                                         />
                                 {/if}
                             </td>
@@ -274,7 +316,7 @@
                                         name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($Objects.item.priority)}][{$field_identifier}]"
                                         type="text"
                                         style="width: 200px;"
-                                        value="{$Objects.extra_fields[$field_identifier]}"
+                                        value="{$Objects.extra_fields[$field_identifier]|wash()}"
                                         />
                                 {/if}
                             </td>
