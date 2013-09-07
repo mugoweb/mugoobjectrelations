@@ -21,7 +21,7 @@
                     {foreach $extra_fields_attribute_level as $fieldIdentifier => $field}
                         {set $optionNumber = 0}
                         <tr id="extra_field_attribute_level{$class_attribute.id}_{$fieldNumber}">
-                            <td style="vertical-align: top;">
+                            <td style="vertical-align: top;" style="white-space: nowrap;">
                                 <img class="mugoobjectrelationlist-move-down" src={'button-move_down.gif'|ezimage()} alt={'Down'|i18n( 'design/standard/class/datatype' )} />
                                 <img class="mugoobjectrelationlist-move-up" src={'button-move_up.gif'|ezimage()} alt={'Up'|i18n( 'design/standard/class/datatype' )} />
                             </td>
@@ -176,17 +176,9 @@
                 {foreach $extra_fields as $fieldIdentifier => $field}
                     {set $optionNumber = 0}
                     <tr id="extra_field_{$class_attribute.id}_{$fieldNumber}">
-                        <td style="vertical-align: top;">
+                        <td style="vertical-align: top;white-space: nowrap;">
                             <img class="mugoobjectrelationlist-move-down" src={'button-move_down.gif'|ezimage()} alt={'Down'|i18n( 'design/standard/class/datatype' )} />
                             <img class="mugoobjectrelationlist-move-up" src={'button-move_up.gif'|ezimage()} alt={'Up'|i18n( 'design/standard/class/datatype' )} />
-                        </td>
-                        <td style="vertical-align: top;">
-                            <input
-                                type="button"
-                                class="button"
-                                onclick="$('#extra_field_{$class_attribute.id}_{$fieldNumber}').empty().remove();$('#extra_field_options_{$class_attribute.id}_{$fieldNumber}').empty().remove();"
-                                value="Delete"
-                            />
                         </td>
                         <td style="vertical-align: top;">
                             <label>
@@ -212,7 +204,7 @@
                                     </td>
                                     <td>
                                         <label>
-                                            <input type="radio"
+                                                <input type="radio"
                                                    name="ContentClass_{$data_type_string}_extra_fields_type_{$class_attribute.id}[{$fieldNumber}]"
                                                    value="text" {if eq($field.type, "text")}checked{/if}
                                                    onclick="$('#ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}').hide();"
@@ -233,9 +225,17 @@
                                 </tr>
                             </table>
                         </td>
+                        <td style="vertical-align: top;">
+                            <input
+                                type="button"
+                                class="button"
+                                onclick="$('#extra_field_{$class_attribute.id}_{$fieldNumber}').empty().remove();$('#extra_field_options_{$class_attribute.id}_{$fieldNumber}').empty().remove();"
+                                value="Delete"
+                            />
+                        </td>
                     </tr>
                     <tr id="extra_field_options_{$class_attribute.id}_{$fieldNumber}"><td></td>
-                        <td colspan="3">
+                        <td colspan="4">
                             {if eq($field.type, "text")}
                                 <div id="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}" style="display: none;">
                             {else}
@@ -244,6 +244,10 @@
                                 <div id="newFields_{$class_attribute.id}_{$fieldNumber}" class="mugoobjectrelationlist-extra-fields-selection">
                                     {foreach $field.options as $option_key => $option}
                                         <div id="newOption{$class_attribute.id}_{$fieldNumber}_{$optionNumber}">
+                                            <span>
+                                                <img class="mugoobjectrelationlist-option-move-down" src={'button-move_down.gif'|ezimage()} alt={'Down'|i18n( 'design/standard/class/datatype' )} />
+                                                <img class="mugoobjectrelationlist-option-move-up" src={'button-move_up.gif'|ezimage()} alt={'Up'|i18n( 'design/standard/class/datatype' )} />
+                                            </span>
                                             <label for="ContentClass_{$data_type_string}_extra_fields_new_options_{$class_attribute.id}_{$fieldNumber}_name" style="display: inline;" >
                                                 Selection name:
                                             </label>
@@ -346,6 +350,18 @@
                         var row = target.closest( 'div' );
                         row.insertBefore( row.prev() );
                     }
+                });
+
+                $('body').on('click', '.mugoobjectrelationlist-option-move-down', function()
+                {
+                    var row = $( this ).closest( 'div' );
+                    row.insertAfter( row.next() );
+                });
+
+                $('body').on('click', '.mugoobjectrelationlist-option-move-up', function()
+                {
+                    var row = $( this ).closest( 'div' );
+                    row.insertBefore( row.prev() );
                 });
             });
             {/literal}
