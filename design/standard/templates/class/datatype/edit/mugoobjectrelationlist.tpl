@@ -80,7 +80,7 @@
                             </td>
                         </tr>
                         <tr id="extra_field_attribute_level_options_{$class_attribute.id}_{$fieldNumber}"><td></td>
-                            <td colspan="3">
+                            <td colspan="4">
                                 {if eq($field.type, "text")}
                                     <div id="ContentClass_{$data_type_string}_extra_fields_attribute_level_new_options_{$class_attribute.id}_{$fieldNumber}" style="display: none;">
                                 {else}
@@ -288,84 +288,73 @@
                 {/foreach}
             </table>
         </div>
-        <script type="text/javascript">
-            {literal}
-            window.idCounter = 0;
-            function addNewOption( element, myId )
-            {
-                window.idCounter++;
-                //console.log('idCounter: ' + window.idCounter);
-                $( element )
-                .append($('<div />', {id:'newOption'+idCounter})
-                    .append( $( '<img>', {{/literal} class: 'mugoobjectrelationlist-move-down', src: {'button-move_down.gif'|ezimage()}, alt: '{'Down'|i18n( 'design/standard/class/datatype' )}'{literal}} ) )
-                    .append( ' ' )
-                    .append( $( '<img>', {{/literal} class: 'mugoobjectrelationlist-move-up', src: {'button-move_up.gif'|ezimage()}, alt: '{'Up'|i18n( 'design/standard/class/datatype' )}'{literal}} ) )
-                    .append( ' ' )
-                    .append( $( '<label>', {for: myId + '_name' + window.idCounter, style:'display:inline;'}).text('Selection name: '))
-                    .append( $( '<input />', {type: 'text', id: myId+'_name' + window.idCounter, name: myId + '_name[]', size: 40}))
-                    .append( ' ' )
-                    .append( $( '<label>', {for: myId + '_identifier' + window.idCounter, style:'display:inline;'}).text('Selection identifier: '))
-                    .append( $( '<input />', {type: 'text', id: myId + '_identifier' + window.idCounter, name: myId + '_identifier[]', size: 40}))
-                    .append( ' ' )
-                    .append( $( '<input />', {type: 'button', class: 'button', onclick: "$('#newOption" + window.idCounter + "').empty().remove();", value: 'Delete'}))
-                );
-            }
-            $( document ).ready( function()
-            {
-                // Sorting the extra fields; we bind the event to the table so that new elements don't need to have events re-bound
-                $( 'table.mugoobjectrelationlist-extra-fields' ).click( function( event )
+        {run-once}
+            <!-- JavaScript functions for Mugo Object Relations only need to be output once for multiple attributes -->
+            <script type="text/javascript">
+                {literal}
+                window.idCounter = 0;
+                function addNewOption( element, myId )
                 {
-                    var target = $( event.target );
-
-                    if( target.is( 'td > .mugoobjectrelationlist-move-down' ) )
-                    {
-                        var row = target.closest( 'tr' );
-                        var rowNext = row.next();
-                        // There is a row for the selection options, so move past that one; start with the row closest to where you want to go
-                        rowNext.insertAfter( rowNext.next().next() );
-                        row.insertAfter( row.next().next() );
-                    }
-                    else if( target.is( 'td > .mugoobjectrelationlist-move-up' ) )
-                    {
-                        var row = target.closest( 'tr' );
-                        var rowNext = row.next();
-                        // There is a row for the selection options, so move past that one
-                        row.insertBefore( row.prev().prev() );
-                        rowNext.insertBefore( rowNext.prev().prev() );
-                    }
-                });
-                
-                $( 'div.mugoobjectrelationlist-extra-fields-selection' ).click( function( event )
+                    window.idCounter++;
+                    //console.log('idCounter: ' + window.idCounter);
+                    $( element )
+                    .append($('<div />', {id:'newOption'+idCounter})
+                        .append( $( '<img>', {{/literal} class: 'mugoobjectrelationlist-move-down', src: {'button-move_down.gif'|ezimage()}, alt: '{'Down'|i18n( 'design/standard/class/datatype' )}'{literal}} ) )
+                        .append( ' ' )
+                        .append( $( '<img>', {{/literal} class: 'mugoobjectrelationlist-move-up', src: {'button-move_up.gif'|ezimage()}, alt: '{'Up'|i18n( 'design/standard/class/datatype' )}'{literal}} ) )
+                        .append( ' ' )
+                        .append( $( '<label>', {for: myId + '_name' + window.idCounter, style:'display:inline;'}).text('Selection name: '))
+                        .append( $( '<input />', {type: 'text', id: myId+'_name' + window.idCounter, name: myId + '_name[]', size: 40}))
+                        .append( ' ' )
+                        .append( $( '<label>', {for: myId + '_identifier' + window.idCounter, style:'display:inline;'}).text('Selection identifier: '))
+                        .append( $( '<input />', {type: 'text', id: myId + '_identifier' + window.idCounter, name: myId + '_identifier[]', size: 40}))
+                        .append( ' ' )
+                        .append( $( '<input />', {type: 'button', class: 'button', onclick: "$('#newOption" + window.idCounter + "').empty().remove();", value: 'Delete'}))
+                    );
+                }
+                $( document ).ready( function()
                 {
-                    var target = $( event.target );
-
-                    // Sorting selection options within extra fields
-                    if( target.is( '.mugoobjectrelationlist-move-down' ) )
+                    // Sorting the extra fields; we bind the event to the table so that new elements don't need to have events re-bound
+                    $( 'table.mugoobjectrelationlist-extra-fields' ).click( function( event )
                     {
-                        var row = target.closest( 'div' );
-                        row.insertAfter( row.next() );
-                    }
-                    else if( target.is( '.mugoobjectrelationlist-move-up' ) )
+                        var target = $( event.target );
+                        if( target.is( 'td > .mugoobjectrelationlist-move-down' ) )
+                        {
+                            var row = target.closest( 'tr' );
+                            var rowNext = row.next();
+                            // There is a row for the selection options, so move past that one; start with the row closest to where you want to go
+                            rowNext.insertAfter( rowNext.next().next() );
+                            row.insertAfter( row.next().next() );
+                        }
+                        else if( target.is( 'td > .mugoobjectrelationlist-move-up' ) )
+                        {
+                            var row = target.closest( 'tr' );
+                            var rowNext = row.next();
+                            // There is a row for the selection options, so move past that one
+                            row.insertBefore( row.prev().prev() );
+                            rowNext.insertBefore( rowNext.prev().prev() );
+                        }
+                    });
+                    
+                    $( 'div.mugoobjectrelationlist-extra-fields-selection' ).click( function( event )
                     {
-                        var row = target.closest( 'div' );
-                        row.insertBefore( row.prev() );
-                    }
+                        var target = $( event.target );
+                        // Sorting selection options within extra fields
+                        if( target.is( '.mugoobjectrelationlist-move-down' ) )
+                        {
+                            var row = target.closest( 'div' );
+                            row.insertAfter( row.next() );
+                        }
+                        else if( target.is( '.mugoobjectrelationlist-move-up' ) )
+                        {
+                            var row = target.closest( 'div' );
+                            row.insertBefore( row.prev() );
+                        }
+                    });
                 });
-
-                $('body').on('click', '.mugoobjectrelationlist-option-move-down', function()
-                {
-                    var row = $( this ).closest( 'div' );
-                    row.insertAfter( row.next() );
-                });
-
-                $('body').on('click', '.mugoobjectrelationlist-option-move-up', function()
-                {
-                    var row = $( this ).closest( 'div' );
-                    row.insertBefore( row.prev() );
-                });
-            });
-            {/literal}
-        </script>
+                {/literal}
+            </script>
+            {/run-once}
     </fieldset>
     <div style="margin-top: 3px;">
         <input
