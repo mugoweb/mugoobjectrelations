@@ -1475,7 +1475,7 @@ class MugoObjectRelationListType extends eZDataType
 
     function fixRelatedObjectItem ( $contentObjectAttribute, $objectID, $mode )
     {
-        eZDebug::writeObject('fixRelatedObjectItem');
+        //eZDebug::writeDebug('fixRelatedObjectItem');
         switch ( $mode )
         {
             case 'move':
@@ -1512,13 +1512,13 @@ class MugoObjectRelationListType extends eZDataType
 
     function fixRelationsMove ( $objectID, $contentObjectAttribute )
     {
-        eZDebug::writeObject('fixRelationsMove');
+        //eZDebug::writeDebug('fixRelationsMove');
         $this->fixRelationsSwap( $objectID, $contentObjectAttribute );
     }
 
     function fixRelationsTrash ( $objectID, $contentObjectAttribute )
     {
-        eZDebug::writeObject('fixRelationsTrash');
+        //eZDebug::writeDebug('fixRelationsTrash');
         $content = $contentObjectAttribute->attribute( 'content' );
         foreach ( array_keys( $content['relation_list'] ) as $key )
         {
@@ -1536,7 +1536,7 @@ class MugoObjectRelationListType extends eZDataType
 
     function fixRelationsRestore ( $objectID, $contentObjectAttribute )
     {
-        eZDebug::writeObject('fixRelationsRestore');
+        //eZDebug::writeDebug('fixRelationsRestore');
         $content = $contentObjectAttribute->content();
 
         foreach ( array_keys( $content['relation_list'] ) as $key )
@@ -1554,14 +1554,14 @@ class MugoObjectRelationListType extends eZDataType
 
     function fixRelationsRemove ( $objectID, $contentObjectAttribute )
     {
-        eZDebug::writeObject('fixRelationsRemove');
+        //eZDebug::writeDebug('fixRelationsRemove');
         $this->removeRelatedObjectItem( $contentObjectAttribute, $objectID );
         $contentObjectAttribute->storeData();
     }
 
     function fixRelationsSwap ( $objectID, $contentObjectAttribute )
     {
-        eZDebug::writeObject('fixRelationsSwap');
+        //eZDebug::writeDebug('fixRelationsSwap');
         $content =& $contentObjectAttribute->content();
 
         foreach ( array_keys( $content['relation_list'] ) as $key )
