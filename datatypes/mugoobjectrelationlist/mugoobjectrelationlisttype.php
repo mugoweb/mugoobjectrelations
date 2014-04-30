@@ -1002,7 +1002,7 @@ class MugoObjectRelationListType extends eZDataType
         
         $extraFieldsAttributeLevel = $doc->createElement( 'extra_fields_attribute_level' );
 
-        if( $content['extra_fields_attribute_level'] )
+        if( isset( $content['extra_fields_attribute_level'] ) && $content['extra_fields_attribute_level'] )
         {
             foreach( $content['extra_fields_attribute_level'] as $extraFieldAttributeLevelIdentifier => $extraFieldAttributeLevelValue )
             {
@@ -1601,30 +1601,36 @@ class MugoObjectRelationListType extends eZDataType
         // Get the value of the identifier
         foreach($content['relation_list'] as $relatedItemKey => $relatedItem)
         {
-            foreach( $relatedItem['extra_fields'] as $fieldKey => $field )
+            if( isset( $relatedItem['extra_fields'] ) && 0 < count( $relatedItem['extra_fields'] ) )
             {
-                // Only store the field if it's part of the class definition
-                if( isset( $classContent['extra_fields'][$fieldKey] ) )
+                foreach( $relatedItem['extra_fields'] as $fieldKey => $field )
                 {
-                    $content['relation_list'][$relatedItemKey]['extra_fields'][$fieldKey] = self::getContentClassFieldOptionName( $contentObjectAttribute, $fieldKey, $field );
-                }
-                else
-                {
-                    unset( $content['relation_list'][$relatedItemKey]['extra_fields'][$fieldKey] );
+                    // Only store the field if it's part of the class definition
+                    if( isset( $classContent['extra_fields'][$fieldKey] ) )
+                    {
+                        $content['relation_list'][$relatedItemKey]['extra_fields'][$fieldKey] = self::getContentClassFieldOptionName( $contentObjectAttribute, $fieldKey, $field );
+                    }
+                    else
+                    {
+                        unset( $content['relation_list'][$relatedItemKey]['extra_fields'][$fieldKey] );
+                    }
                 }
             }
         }
-        
-        foreach( $content['extra_fields_attribute_level'] as $fieldKey => $field )
+
+        if( isset( $content['extra_fields_attribute_level'] ) &&  0 < count( $content['extra_fields_attribute_level'] ) )
         {
-            // Only store the field if it's part of the class definition
-            if( isset( $classContent['extra_fields_attribute_level'][$fieldKey] ) )
+            foreach( $content['extra_fields_attribute_level'] as $fieldKey => $field )
             {
-                $content['extra_fields_attribute_level'][$fieldKey] = self::getContentClassFieldOptionName( $contentObjectAttribute, $fieldKey, $field, true );
-            }
-            else
-            {
-                unset( $content['extra_fields_attribute_level'][$fieldKey] );
+                // Only store the field if it's part of the class definition
+                if( isset( $classContent['extra_fields_attribute_level'][$fieldKey] ) )
+                {
+                    $content['extra_fields_attribute_level'][$fieldKey] = self::getContentClassFieldOptionName( $contentObjectAttribute, $fieldKey, $field, true );
+                }
+                else
+                {
+                    unset( $content['extra_fields_attribute_level'][$fieldKey] );
+                }
             }
         }
 
