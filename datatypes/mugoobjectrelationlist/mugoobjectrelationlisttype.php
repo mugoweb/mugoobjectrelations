@@ -1958,46 +1958,43 @@ class MugoObjectRelationListType extends eZDataType
             $relationData = array();
             $relationData[0] = $objectInfo['contentobject_id'];
             $extraFieldsData = array();
-
-            foreach( $objectInfo['extra_fields'] as $extraFieldIdentifier => $extraField )
+            if( isset( $objectInfo['extra_fields'] ) )
             {
-
-                // Output a selection
-                if( is_array( $extraField ) && isset( $extraField['identifier'] ) )
+                foreach( $objectInfo['extra_fields'] as $extraFieldIdentifier => $extraField )
                 {
-                    $extraField = $extraField['identifier'];
+                    // Output a selection
+                    if( is_array( $extraField ) && isset( $extraField['identifier'] ) )
+                    {
+                        $extraField = $extraField['identifier'];
+                    }
+                    $extraFieldsData[] = eZStringUtils::implodeStr( array( $extraFieldIdentifier, $extraField ), self::OPTIONSEPARATOR );
                 }
-
-                $extraFieldsData[] = eZStringUtils::implodeStr( array( $extraFieldIdentifier, $extraField ), self::OPTIONSEPARATOR );
             }
-            
             $relationData[1] = eZStringUtils::implodeStr( $extraFieldsData, self::FIELDSEPARATOR );
-
             $objectIDList[] = implode( $relationData, self::FIELDSEPARATOR );
         }
 
         $toString = eZStringUtils::implodeStr( $objectIDList, self::RELATIONSEPARATOR );
         
-        if( $objectAttributeContent['extra_fields_attribute_level'] )
+        if( isset( $objectAttributeContent['extra_fields_attribute_level'] ) )
         {
-            $toString .= self::EXTRAFIELDSSEPARATOR;
-            $extraFieldsAttributeLevelData = array();
-
-            foreach( $objectAttributeContent['extra_fields_attribute_level'] as $extraFieldIdentifier => $extraField )
+            if( $objectAttributeContent['extra_fields_attribute_level'] )
             {
-                $fieldSeparator = '';
-                $extraFieldsData = array();
-
-                // Output a selection
-                if( is_array( $extraField ) && isset( $extraField['identifier'] ) )
+                $toString .= self::EXTRAFIELDSSEPARATOR;
+                $extraFieldsAttributeLevelData = array();
+                foreach( $objectAttributeContent['extra_fields_attribute_level'] as $extraFieldIdentifier => $extraField )
                 {
-                    $extraField = $extraField['identifier'];
+                    $fieldSeparator = '';
+                    $extraFieldsData = array();
+                    // Output a selection
+                    if( is_array( $extraField ) && isset( $extraField['identifier'] ) )
+                    {
+                        $extraField = $extraField['identifier'];
+                    }
+                    $extraFieldsAttributeLevelData[] = eZStringUtils::implodeStr( array( $extraFieldIdentifier, $extraField ), self::OPTIONSEPARATOR );
                 }
-                
-                $extraFieldsAttributeLevelData[] = eZStringUtils::implodeStr( array( $extraFieldIdentifier, $extraField ), self::OPTIONSEPARATOR );
+                $toString .= eZStringUtils::implodeStr( $extraFieldsAttributeLevelData, self::FIELDSEPARATOR );
             }
-            
-            $toString .= eZStringUtils::implodeStr( $extraFieldsAttributeLevelData, self::FIELDSEPARATOR );
         }
         
         return $toString;
