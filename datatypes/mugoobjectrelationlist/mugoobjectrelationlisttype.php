@@ -1862,7 +1862,7 @@ class MugoObjectRelationListType extends eZDataType
                     if( $attributeXMLName == 'extra_fields' )
                     {
                         $fields = $relationItem->childNodes->item( 0 );
-                        if( $fields->childNodes->length > 0 )
+                        if( is_object( $fields ) && $fields->childNodes->length > 0 )
                         {
                             $extraFields = array();
                             for( $counter = 0; $counter < $fields->childNodes->length; $counter++ )
