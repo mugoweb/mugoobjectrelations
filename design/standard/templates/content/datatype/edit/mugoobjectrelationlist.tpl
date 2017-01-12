@@ -175,7 +175,7 @@
                                 {if eq( 'selection', $field.type )}
                                     <select
                                         id="field{$attribute.id}{$field_identifier}"
-                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($:item.priority)}][{$field_identifier}]"
+                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{$Relation:index}][{$field_identifier}]"
                                         style="width: 200px;"
                                     >
                                         <option value=""></option>
@@ -191,7 +191,7 @@
                                 {else}
                                     <input
                                         id="field{$attribute.id}{$field_identifier}"
-                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($:item.priority)}][{$field_identifier}]"
+                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{$Relation:index}][{$field_identifier}]"
                                         type="text"
                                         style="width: 200px;"
                                         value="{$:item.extra_fields[$field_identifier]|wash()}"
@@ -302,7 +302,7 @@
                                 {if eq( 'selection', $field.type )}
                                     <select
                                         id="field{$attribute.id}{$field_identifier}"
-                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($Objects.item.priority)}][{$field_identifier}]"
+                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{$Relation:index}][{$field_identifier}]"
                                         style="width: 200px;"
                                     >
                                         <option value=""></option>
@@ -313,7 +313,7 @@
                                 {else}
                                     <input
                                         id="field{$attribute.id}{$field_identifier}"
-                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{dec($Objects.item.priority)}][{$field_identifier}]"
+                                        name="{$attribute_base}_extra_fields_{$attribute.id}[{$Relation:index}][{$field_identifier}]"
                                         type="text"
                                         style="width: 200px;"
                                         value="{$Objects.extra_fields[$field_identifier]|wash()}"
