@@ -3,4 +3,4 @@
 [SolrFieldMapSettings]
 CustomMap[mugoobjectrelationlist]=mugoSolrDocumentFieldObjectRelation
 
-/* ?>
+*/
