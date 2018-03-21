@@ -1544,7 +1544,8 @@ class MugoObjectRelationListType extends eZDataType
             if ( $content['relation_list'][$key]['contentobject_id'] == $objectID )
             {
                 $priority = $content['relation_list'][$key]['priority'];
-                $content['relation_list'][$key] = $this->appendObject( $objectID, $priority, $contentObjectAttribute);
+                $extraFields = isset( $content['relation_list'][$key]['extra_fields'] ) ? $content['relation_list'][$key]['extra_fields'] : array();
+                $content['relation_list'][$key] = $this->appendObject( $objectID, $priority, $contentObjectAttribute, $extraFields );
             }
         }
         MugoObjectRelationListType::storeObjectAttributeContent( $contentObjectAttribute, $content );
@@ -1570,7 +1571,8 @@ class MugoObjectRelationListType extends eZDataType
             if ( $relatedObject['contentobject_id'] == $objectID )
             {
                 $priority = $content['relation_list'][$key]['priority'];
-                $content['relation_list'][$key] = $this->appendObject($objectID, $priority, $contentObjectAttribute );
+                $extraFields = isset( $content['relation_list'][$key]['extra_fields'] ) ? $content['relation_list'][$key]['extra_fields'] : array();
+                $content['relation_list'][$key] = $this->appendObject( $objectID, $priority, $contentObjectAttribute, $extraFields );
             }
         }
 
