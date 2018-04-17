@@ -665,6 +665,115 @@ class MugoObjectRelationListType extends eZObjectRelationListType
         return $relationItem;
     }
 
+    function fixRelatedObjectItem ( $contentObjectAttribute, $objectID, $mode )
+    {
+        //eZDebug::writeDebug('fixRelatedObjectItem');
+        switch ( $mode )
+        {
+            case 'move':
+            {
+                MugoObjectRelationListType::fixRelationsMove( $objectID, $contentObjectAttribute );
+            } break;
+
+            case 'trash':
+            {
+                MugoObjectRelationListType::fixRelationsTrash( $objectID, $contentObjectAttribute );
+            } break;
+
+            case 'restore':
+            {
+                MugoObjectRelationListType::fixRelationsRestore( $objectID, $contentObjectAttribute );
+            } break;
+
+            case 'remove':
+            {
+                MugoObjectRelationListType::fixRelationsRemove( $objectID, $contentObjectAttribute );
+            } break;
+
+            case 'swap':
+            {
+                MugoObjectRelationListType::fixRelationsSwap( $objectID, $contentObjectAttribute );
+            } break;
+
+            default:
+            {
+                eZDebug::writeWarning( $mode, 'Unknown mode MugoObjectRelationListType::fixRelatedObjectItem()' );
+            } break;
+        }
+    }
+
+    function fixRelationsMove ( $objectID, $contentObjectAttribute )
+    {
+        //eZDebug::writeDebug('fixRelationsMove');
+        $this->fixRelationsSwap( $objectID, $contentObjectAttribute );
+    }
+
+    function fixRelationsTrash ( $objectID, $contentObjectAttribute )
+    {
+        //eZDebug::writeDebug('fixRelationsTrash');
+        $content = $contentObjectAttribute->attribute( 'content' );
+        foreach ( array_keys( $content['relation_list'] ) as $key )
+        {
+            if ( $content['relation_list'][$key]['contentobject_id'] == $objectID )
+            {
+                $content['relation_list'][$key]['in_trash'] = true;
+                $content['relation_list'][$key]['node_id'] = null;
+                $content['relation_list'][$key]['parent_node_id']= null;
+            }
+        }
+        MugoObjectRelationListType::storeObjectAttributeContent( $contentObjectAttribute, $content );
+        $contentObjectAttribute->setContent( $content );
+        $contentObjectAttribute->storeData();
+    }
+
+    function fixRelationsRestore ( $objectID, $contentObjectAttribute )
+    {
+        //eZDebug::writeDebug('fixRelationsRestore');
+        $content = $contentObjectAttribute->content();
+
+        foreach ( array_keys( $content['relation_list'] ) as $key )
+        {
+            if ( $content['relation_list'][$key]['contentobject_id'] == $objectID )
+            {
+                $priority = $content['relation_list'][$key]['priority'];
+                $extraFields = isset( $content['relation_list'][$key]['extra_fields'] ) ? $content['relation_list'][$key]['extra_fields'] : array();
+                $content['relation_list'][$key] = $this->appendObject( $objectID, $priority, $contentObjectAttribute, $extraFields );
+            }
+        }
+        MugoObjectRelationListType::storeObjectAttributeContent( $contentObjectAttribute, $content );
+        $contentObjectAttribute->setContent( $content );
+        $contentObjectAttribute->storeData();
+    }
+
+    function fixRelationsRemove ( $objectID, $contentObjectAttribute )
+    {
+        //eZDebug::writeDebug('fixRelationsRemove');
+        $this->removeRelatedObjectItem( $contentObjectAttribute, $objectID );
+        $contentObjectAttribute->storeData();
+    }
+
+    function fixRelationsSwap ( $objectID, $contentObjectAttribute )
+    {
+        //eZDebug::writeDebug('fixRelationsSwap');
+        $content =& $contentObjectAttribute->content();
+
+        foreach ( array_keys( $content['relation_list'] ) as $key )
+        {
+            $relatedObject =& $content['relation_list'][$key];
+            if ( $relatedObject['contentobject_id'] == $objectID )
+            {
+                $priority = $content['relation_list'][$key]['priority'];
+                $extraFields = isset( $content['relation_list'][$key]['extra_fields'] ) ? $content['relation_list'][$key]['extra_fields'] : array();
+                $content['relation_list'][$key] = $this->appendObject( $objectID, $priority, $contentObjectAttribute, $extraFields );
+            }
+        }
+
+        MugoObjectRelationListType::storeObjectAttributeContent( $contentObjectAttribute, $content );
+        $contentObjectAttribute->setContent( $content );
+        $contentObjectAttribute->storeData();
+    }
+
+
     /*!
      Returns the content.
     */
