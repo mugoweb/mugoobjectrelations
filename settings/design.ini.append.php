@@ -2,4 +2,4 @@
 
 [ExtensionSettings]
 DesignExtensions[]=mugoobjectrelations
-*/ ?>
+*/
