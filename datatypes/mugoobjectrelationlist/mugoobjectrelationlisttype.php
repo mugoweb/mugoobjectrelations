@@ -2194,7 +2194,7 @@ class MugoObjectRelationListType extends eZDataType
         if ( isset( $content['extra_fields'] ) )
         {
             $extra_fields = $dom->createElement( 'extra_fields' );
-            $extra_fields->appendChild( $dom->createTextNode( $content['extra_fields'] ) );
+            $extra_fields->appendChild( $dom->createTextNode( json_encode($content['extra_fields']) ) );
             $attributeParametersNode->appendChild( $extra_fields );
         }
 
@@ -2233,7 +2233,7 @@ class MugoObjectRelationListType extends eZDataType
             $content['object_class'] = $objectClassNode->textContent;
         }
 
-        $extra_fields = $attributeParametersNode->getElementsByTagName( 'extra_fields' );
+        $extra_fields = json_decode( $attributeParametersNode->getElementsByTagName( 'extra_fields' ), true );
         foreach( $extra_fields as $option )
         {
             $content['extra_fields']['name'] = $option->getAttribute( 'value' );
