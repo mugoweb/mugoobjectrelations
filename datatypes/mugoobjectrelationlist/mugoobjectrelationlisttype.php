@@ -183,6 +183,9 @@ class MugoObjectRelationListType extends eZDataType
         $contentClassAttribute = $contentObjectAttribute->contentClassAttribute();
         $classContent = $contentClassAttribute->content();
 
+        // We need to keep track of this to sort properly
+        $selectedObjectIDArray = $http->hasPostVariable( $postVariableName ) ? $http->postVariable( $postVariableName ) : false;
+
         $contentObjectAttributeID = $contentObjectAttribute->attribute( 'id' );
 
         // To get the data from the post
@@ -206,7 +209,7 @@ class MugoObjectRelationListType extends eZDataType
         for( $i=0; $i<count( $content['relation_list'] ); ++$i )
         {
             // sanitize
-            $priorities[ $contentObjectAttributeID ][$i] = (int )$priorities[ $contentObjectAttributeID ][$i];
+            $priorities[ $contentObjectAttributeID ][$i] = (int)$priorities[ $contentObjectAttributeID ][$i];
             $existsPriorities[ $i ] = $priorities[ $contentObjectAttributeID ][$i];
 
             // Change objects' priorities providing their uniqueness.
@@ -221,6 +224,9 @@ class MugoObjectRelationListType extends eZDataType
                     $priorities[$contentObjectAttributeID][$j] = $index;
                 }
             }
+        }
+        for( $i=0; $i<count( $content['relation_list'] ); ++$i )
+        {
             $relationItem = $content['relation_list'][$i];
             if( $relationItem['is_modified'] )
             {
@@ -242,11 +248,11 @@ class MugoObjectRelationListType extends eZDataType
             }
             if ( isset( $priorities[$contentObjectAttributeID][$i] ) )
             {
-                $relationItem['priority'] = $priorities[$contentObjectAttributeID][$i];
+                $relationItem['priority'] = $priorities[$contentObjectAttributeID][(int)array_search($relationItem['contentobject_id'], $selectedObjectIDArray)];
             }
 
             // Storing Extra fields
-            foreach( $extraFieldList[$i] as $extraFieldIdentifier => $extraFieldValue )
+            foreach( $extraFieldList[(int)array_search($relationItem['contentobject_id'], $selectedObjectIDArray)] as $extraFieldIdentifier => $extraFieldValue )
             {
                 $relationItem["extra_fields"][$extraFieldIdentifier] = self::getContentClassFieldOptionName( $contentObjectAttribute, $extraFieldIdentifier, $extraFieldValue );
             }

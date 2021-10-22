@@ -73,6 +73,7 @@
                 </tr>
                 {section name=Relation loop=$attribute.content.relation_list sequence=array( bglight, bgdark )}
                     <tr class="{$:sequence}">
+                        <input type="hidden" name="{$attribute_base}_data_object_relation_list_{$attribute.id}[]" value="{$:item.contentobject_id}" />
                         {section show=$:item.is_modified}
                             {* Remove. *}
                             <td>
@@ -259,6 +260,7 @@
                     {let object=fetch( content, object, hash( object_id, $Objects.item.contentobject_id ) )}
                     <tr class="{$Objects.sequence}">
                         {* Remove. *}
+                        <input type="hidden" name="{$attribute_base}_data_object_relation_list_{$attribute.id}[]" value="{$Objects.item.contentobject_id}" />
                         <td><input type="checkbox" name="{$attribute_base}_selection[{$attribute.id}][]" value="{$Objects.item.contentobject_id}" /></td>
                             {* Name *}
                         <td>{$object.name|wash()}</td>
