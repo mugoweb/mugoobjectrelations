@@ -19,7 +19,7 @@ class MugoObjectRelationListType extends eZDataType
     /*!
      Initializes with a string id and a description.
     */
-    function MugoObjectRelationListType()
+    function __construct()
     {
         //eZDebug::writeDebug('MugoObjectRelationListType');
         $this->eZDataType( self::DATA_TYPE_STRING, "Mugo object relations",
@@ -1609,7 +1609,7 @@ class MugoObjectRelationListType extends eZDataType
         // Get the value of the identifier
         foreach($content['relation_list'] as $relatedItemKey => $relatedItem)
         {
-            if( isset( $relatedItem['extra_fields'] ) && 0 < count( $relatedItem['extra_fields'] ) )
+            if( $relatedItem && isset( $relatedItem['extra_fields'] ) && 0 < count( $relatedItem['extra_fields'] ) )
             {
                 foreach( $relatedItem['extra_fields'] as $fieldKey => $field )
                 {
@@ -1869,8 +1869,8 @@ class MugoObjectRelationListType extends eZDataType
                     // Recover the extrafields from the XML
                     if( $attributeXMLName == 'extra_fields' )
                     {
-                        $fields = $relationItem->childNodes->item( 0 );
-                        if( is_object( $fields ) && $fields->childNodes->length > 0 )
+                        $fields = ( $relationItem->childNodes->length > 0 ) ? $relationItem->childNodes->item( 0 ) : false;
+                        if( $fields )
                         {
                             $extraFields = array();
                             for( $counter = 0; $counter < $fields->childNodes->length; $counter++ )
