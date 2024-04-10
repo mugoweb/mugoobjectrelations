@@ -2195,12 +2195,42 @@ class MugoObjectRelationListType extends eZDataType
             $classConstraintsNode->appendChild( $classConstraintNode );
         }
 
-        //Serialize the extra fields
-
-        if ( isset( $content['extra_fields'] ) )
+        //Serialize the extrafields
+        if ( isset( $content['extra_fields'] ) && is_array( $content['extra_fields'] ) )
         {
             $extra_fields = $dom->createElement( 'extra_fields' );
-            $extra_fields->appendChild( $dom->createTextNode( $content['extra_fields'] ) );
+            foreach( $content['extra_fields'] as $extraFieldIdentifier => $extraField )
+            {
+                $field = $dom->createElement( 'field' );
+                $field->setAttribute( 'name', $extraField['name'] );
+                $field->setAttribute( 'identifier', $extraFieldIdentifier );
+                $field->setAttribute( 'type', $extraField['type'] );
+                $field->setAttribute( 'required', $extraField['required'] );
+
+                if( 'selection' == $extraField['type'] )
+                {
+                    // Create the options
+                    if( !$extraField['options'] )
+                    {
+                        $extraField['options'] = array();
+                    }
+                    $fieldOptions = $dom->createElement( 'options' );
+                    if( $extraField['options'] )
+                    {
+                        foreach( $extraField['options'] as $optionIdentifier => $optionName )
+                        {
+                            $fieldOption = $dom->createElement( 'option' );
+                            $fieldOption->setAttribute( 'name', $optionName );
+                            $fieldOption->setAttribute( 'identifier', $optionIdentifier );
+
+                            $fieldOptions->appendChild( $fieldOption );
+                        }
+                    }
+                    $field->appendChild( $fieldOptions );
+                }
+                //Put the elements in the tree
+                $extra_fields->appendChild( $field );
+            }
             $attributeParametersNode->appendChild( $extra_fields );
         }
 
@@ -2239,10 +2269,40 @@ class MugoObjectRelationListType extends eZDataType
             $content['object_class'] = $objectClassNode->textContent;
         }
 
-        $extra_fields = $attributeParametersNode->getElementsByTagName( 'extra_fields' );
-        foreach( $extra_fields as $option )
+        // Get all the field elements <extra_fields><field></field><field></field></extra_fields>
+        $fields = $attributeParametersNode->getElementsByTagName( 'field' );
+        foreach( $fields as $field )
         {
-            $content['extra_fields']['name'] = $option->getAttribute( 'value' );
+            $fieldName = $field->getAttribute( 'name' );
+            $fieldIdentifier = $field->getAttribute( 'identifier' );
+            $fieldType = $field->getAttribute( 'type' );
+            $fieldRequired = $field->getAttribute( 'required' );
+
+            $content['extra_fields'][$fieldIdentifier] = array( 
+                'name' => $fieldName, 
+                'type' => $fieldType, 
+                'required' => $fieldRequired 
+            );
+            // get the children (only options for now)
+            for( $fieldChildCount = 0; $fieldChildCount < $field->childNodes->length; $fieldChildCount++ )
+            {
+                $fieldChild = $field->childNodes->item( $fieldChildCount ); //this is an element
+                $fieldChildName = $fieldChild->tagName;
+                if( 'options' == $fieldChildName )
+                {
+                    if( $fieldChild->childNodes->length > 0 )
+                    {
+                        $options = $fieldChild->childNodes;
+                        for($optionsCount = 0; $optionsCount < $options->length; $optionsCount++)
+                        {
+                            $option = $options->item($optionsCount);
+                            $optionName = $option->getAttribute( 'name' );
+                            $optionIdentifier = $option->getAttribute( 'identifier' );
+                            $content['extra_fields'][$fieldIdentifier]['options'][$optionIdentifier] = $optionName;
+                        }
+                    }
+                }
+            }
         }
 
         $classAttribute->setContent( $content );
