@@ -32,6 +32,11 @@ class mugoSolrDocumentFieldObjectRelation extends ezfSolrDocumentFieldBase
                 continue;
             }
 
+            if( $relationItem[ 'in_trash' ] )
+            {
+                continue;
+            }
+
             $object = eZContentObject::fetch( $objectID );
 
             if ( !$object )
