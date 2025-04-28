@@ -265,13 +265,13 @@ class MugoObjectRelationListType extends eZDataType
         $content['relation_list'] = array();
         reset( $reorderedRelationList );
         $i = 0;
-        while ( list( $key, $relationItem ) = each( $reorderedRelationList ) )
+        foreach($reorderedRelationList as $key => $relationItem)
         {
             $content['relation_list'][] = $relationItem;
             $content['relation_list'][$i]['priority'] = $i + 1;
             ++$i;
         }
-        
+
         // Store extra fields (attribute-level) fields
         $extraFieldsBase = $base . '_extra_fields_attribute_level_' . $contentObjectAttributeID;
         $extraFieldList = array();
