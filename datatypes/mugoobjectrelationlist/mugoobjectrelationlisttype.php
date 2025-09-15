@@ -202,65 +202,79 @@ class MugoObjectRelationListType extends eZDataType
         {
             $priorities = $http->postVariable( $priorityBase );
         }
-        $reorderedRelationList = array();
 
-        // Contains existing priorities
-        $existsPriorities = array();
-        for( $i=0; $i<count( $content['relation_list'] ); ++$i )
-        {
-            // sanitize
-            $priorities[ $contentObjectAttributeID ][$i] = (int)$priorities[ $contentObjectAttributeID ][$i];
-            $existsPriorities[ $i ] = $priorities[ $contentObjectAttributeID ][$i];
+        // First loop: Sanitize priorities and enforce uniqueness
+        $existsPriorities = [];
+        for ($i = 0; $i < count($content['relation_list']); ++$i) {
+            // Sanitize priority
+            $priorities[$contentObjectAttributeID][$i] = (int)$priorities[$contentObjectAttributeID][$i];
+            $existsPriorities[$i] = $priorities[$contentObjectAttributeID][$i];
 
-            // Change objects' priorities providing their uniqueness.
-            for( $j = 0; $j < count( $content['relation_list'] ); ++$j )
-            {
-                if( $i == $j ) continue;
-                if( $priorities[$contentObjectAttributeID][$i] == $priorities[$contentObjectAttributeID][$j] )
-                {
+            // Enforce unique priorities
+            for ($j = 0; $j < count($content['relation_list']); ++$j) {
+                if ($i == $j) continue;
+                if ($priorities[$contentObjectAttributeID][$i] == $priorities[$contentObjectAttributeID][$j]) {
                     $index = $priorities[$contentObjectAttributeID][$i];
-                    while ( in_array( $index, $existsPriorities ) )
+                    while (in_array($index, $existsPriorities)) {
                         ++$index;
+                    }
                     $priorities[$contentObjectAttributeID][$j] = $index;
+                    $existsPriorities[$j] = $index;
                 }
             }
         }
-        for( $i=0; $i<count( $content['relation_list'] ); ++$i )
-        {
+
+        // Second loop: Process relation items and assign priorities
+        $reorderedRelationList = [];
+        for ($i = 0; $i < count($content['relation_list']); ++$i) {
             $relationItem = $content['relation_list'][$i];
-            if( $relationItem['is_modified'] )
-            {
+
+            // Handle modified items
+            if ($relationItem['is_modified']) {
                 $subObjectID = $relationItem['contentobject_id'];
                 $attributeBase = $base . '_ezorl_edit_object_' . $subObjectID;
                 $object = $content['temp'][$subObjectID]['object'];
-                if( $object )
-                {
+                if ($object) {
                     $attributes = $content['temp'][$subObjectID]['attributes'];
-
-                    $customActionAttributeArray = array();
-                    $fetchResult = $object->fetchInput( $attributes, $attributeBase,
-                                                        $customActionAttributeArray,
-                                                        $contentObjectAttribute->inputParameters() );
+                    $customActionAttributeArray = [];
+                    $fetchResult = $object->fetchInput(
+                        $attributes,
+                        $attributeBase,
+                        $customActionAttributeArray,
+                        $contentObjectAttribute->inputParameters()
+                    );
                     $content['temp'][$subObjectID]['attribute-input-map'] = $fetchResult['attribute-input-map'];
                     $content['temp'][$subObjectID]['attributes'] = $attributes;
                     $content['temp'][$subObjectID]['object'] = $object;
                 }
             }
-            if ( isset( $priorities[$contentObjectAttributeID][$i] ) )
-            {
-                $relationItem['priority'] = $priorities[$contentObjectAttributeID][(int)array_search($relationItem['contentobject_id'], $selectedObjectIDArray)];
+
+            // Assign priority directly from the priorities array
+            if (isset($priorities[$contentObjectAttributeID][$i])) {
+                $relationItem['priority'] = $priorities[$contentObjectAttributeID][$i];
             }
 
             // Storing Extra fields
-            foreach( $extraFieldList[(int)array_search($relationItem['contentobject_id'], $selectedObjectIDArray)] as $extraFieldIdentifier => $extraFieldValue )
-            {
-                $relationItem["extra_fields"][$extraFieldIdentifier] = self::getContentClassFieldOptionName( $contentObjectAttribute, $extraFieldIdentifier, $extraFieldValue );
+            // Find all indices where this contentobject_id appears in selectedObjectIDArray
+            $indices = array_keys($selectedObjectIDArray, $relationItem['contentobject_id']);
+            $index = $indices[array_search($i, array_keys($content['relation_list']))] ?? $i;
+
+            foreach ($extraFieldList[$index] as $extraFieldIdentifier => $extraFieldValue) {
+                $relationItem['extra_fields'][$extraFieldIdentifier] = self::getContentClassFieldOptionName(
+                    $contentObjectAttribute,
+                    $extraFieldIdentifier,
+                    $extraFieldValue
+                );
             }
 
+            // Store in reordered list with unique priority
             $reorderedRelationList[$relationItem['priority']] = $relationItem;
         }
 
-        ksort( $reorderedRelationList );
+        // Sort by priority to ensure correct order
+        ksort($reorderedRelationList);
+
+
         unset( $content['relation_list'] );
         $content['relation_list'] = array();
         reset( $reorderedRelationList );
@@ -1288,22 +1302,6 @@ class MugoObjectRelationListType extends eZDataType
 
                         continue;
                     }
-
-                    /* Here we check if current object is already in the related objects list.
-                     * If so, we don't add it again.
-                     * FIXME: Stupid linear search. Maybe there's some better way?
-                     */
-                    $found = false;
-                    foreach ( $content['relation_list'] as $i )
-                    {
-                        if ( $i['contentobject_id'] == $objectID )
-                        {
-                            $found = true;
-                            break;
-                        }
-                    }
-                    if ( $found )
-                        continue;
 
                     ++$priority;
                     $content['relation_list'][] = $this->appendObject( $objectID, $priority, $contentObjectAttribute );
